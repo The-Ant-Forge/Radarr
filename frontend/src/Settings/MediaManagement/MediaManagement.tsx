@@ -364,6 +364,18 @@ function MediaManagement() {
                 />
               </FormGroup>
 
+              <FormGroup size={sizes.MEDIUM}>
+                <FormLabel>{translate('UnmonitorOnCutoffMet')}</FormLabel>
+
+                <FormInputGroup
+                  type={inputTypes.CHECK}
+                  name="unmonitorOnCutoffMet"
+                  helpText={translate('UnmonitorOnCutoffMetHelpText')}
+                  onChange={handleInputChange}
+                  {...settings.unmonitorOnCutoffMet}
+                />
+              </FormGroup>
+
               <FormGroup
                 advancedSettings={showAdvancedSettings}
                 isAdvanced={true}

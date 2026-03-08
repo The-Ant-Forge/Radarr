@@ -1970,6 +1970,8 @@
   "UnmappedFolders": "Unmapped Folders",
   "UnmonitorDeletedMovies": "Unmonitor Deleted Movies",
   "UnmonitorDeletedMoviesHelpText": "Movies deleted from disk are automatically unmonitored in {appName}",
+  "UnmonitorOnCutoffMet": "Disable Monitoring",
+  "UnmonitorOnCutoffMetHelpText": "Turn off monitoring of downloaded media once the quality cutoff is met",
   "UnmonitorSelected": "Unmonitor Selected",
   "Unmonitored": "Unmonitored",
   "Unreleased": "Unreleased",

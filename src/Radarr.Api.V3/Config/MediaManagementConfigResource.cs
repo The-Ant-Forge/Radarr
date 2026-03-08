@@ -8,6 +8,7 @@ namespace Radarr.Api.V3.Config
     public class MediaManagementConfigResource : RestResource
     {
         public bool AutoUnmonitorPreviouslyDownloadedMovies { get; set; }
+        public bool UnmonitorOnCutoffMet { get; set; }
         public string RecycleBin { get; set; }
         public int RecycleBinCleanupDays { get; set; }
         public ProperDownloadTypes DownloadPropersAndRepacks { get; set; }
@@ -39,6 +40,7 @@ namespace Radarr.Api.V3.Config
             return new MediaManagementConfigResource
             {
                 AutoUnmonitorPreviouslyDownloadedMovies = model.AutoUnmonitorPreviouslyDownloadedMovies,
+                UnmonitorOnCutoffMet = model.UnmonitorOnCutoffMet,
                 RecycleBin = model.RecycleBin,
                 RecycleBinCleanupDays = model.RecycleBinCleanupDays,
                 DownloadPropersAndRepacks = model.DownloadPropersAndRepacks,

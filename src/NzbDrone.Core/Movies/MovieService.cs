@@ -6,6 +6,7 @@ using NzbDrone.Common.Extensions;
 using NzbDrone.Core.AutoTagging;
 using NzbDrone.Core.Configuration;
 using NzbDrone.Core.Datastore;
+using NzbDrone.Core.DecisionEngine.Specifications;
 using NzbDrone.Core.MediaFiles;
 using NzbDrone.Core.MediaFiles.Events;
 using NzbDrone.Core.Messaging.Events;
@@ -59,6 +60,7 @@ namespace NzbDrone.Core.Movies
         private readonly IEventAggregator _eventAggregator;
         private readonly IBuildMoviePaths _moviePathBuilder;
         private readonly IAutoTaggingService _autoTaggingService;
+        private readonly IUpgradableSpecification _upgradableSpecification;
         private readonly Logger _logger;
 
         public MovieService(IMovieRepository movieRepository,
@@ -66,6 +68,7 @@ namespace NzbDrone.Core.Movies
                             IConfigService configService,
                             IBuildMoviePaths moviePathBuilder,
                             IAutoTaggingService autoTaggingService,
+                            IUpgradableSpecification upgradableSpecification,
                             Logger logger)
         {
             _movieRepository = movieRepository;
@@ -73,6 +76,7 @@ namespace NzbDrone.Core.Movies
             _configService = configService;
             _moviePathBuilder = moviePathBuilder;
             _autoTaggingService = autoTaggingService;
+            _upgradableSpecification = upgradableSpecification;
             _logger = logger;
         }
 
@@ -440,9 +444,17 @@ namespace NzbDrone.Core.Movies
         {
             var movie = message.MovieFile.Movie;
             movie.MovieFileId = message.MovieFile.Id;
+
+            if (_configService.UnmonitorOnCutoffMet &&
+                movie.QualityProfile != null &&
+                !_upgradableSpecification.QualityCutoffNotMet(movie.QualityProfile, message.MovieFile.Quality))
+            {
+                movie.Monitored = false;
+                _logger.Info("Unmonitoring movie [{0}] — quality cutoff met", movie.Title);
+            }
+
             _movieRepository.Update(movie);
 
-            // _movieRepository.SetFileId(message.MovieFile.Id, message.MovieFile.Movie.Value.Id);
             _logger.Info("Assigning file [{0}] to movie [{1}]", message.MovieFile.RelativePath, message.MovieFile.Movie);
         }
 
