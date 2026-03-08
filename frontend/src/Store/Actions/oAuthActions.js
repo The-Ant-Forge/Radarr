@@ -41,10 +41,15 @@ export const resetOAuth = createAction(RESET_OAUTH);
 //
 // Helpers
 
-function showOAuthWindow(url, payload) {
-  const selfWindow = window;
+// Per-flow OAuth callback map keyed by nonce.
+// Each popup gets a unique window.name which oauth.html uses to look up the right callback.
+if (!window._oauthCallbacks) {
+  window._oauthCallbacks = {};
+}
 
-  const newWindow = window.open(url);
+function showOAuthWindow(url, payload) {
+  const nonce = `oauth_${Math.random().toString(36).slice(2)}`;
+  const newWindow = window.open(url, nonce);
 
   if (
     !newWindow ||
@@ -70,7 +75,7 @@ function showOAuthWindow(url, payload) {
     const pollInterval = setInterval(() => {
       if (newWindow.closed) {
         clearInterval(pollInterval);
-        delete selfWindow.onCompleteOauth;
+        delete window._oauthCallbacks[nonce];
 
         const error = {
           status: 400,
@@ -86,9 +91,9 @@ function showOAuthWindow(url, payload) {
       }
     }, 500);
 
-    selfWindow.onCompleteOauth = function(query, onComplete) {
+    window._oauthCallbacks[nonce] = function(query, onComplete) {
       clearInterval(pollInterval);
-      delete selfWindow.onCompleteOauth;
+      delete window._oauthCallbacks[nonce];
 
       const queryParams = {};
       const splitQuery = query.substring(1).split('&');

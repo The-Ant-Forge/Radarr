@@ -97,7 +97,9 @@ namespace NzbDrone.Core.Movies.Translations
 
         public void HandleAsync(MoviesDeletedEvent message)
         {
-            // TODO handle metadata delete instead of movie delete
+            // Known debt: ideally listens for a MovieMetadataDeletedEvent so orphaned
+            // translations are cleaned up when metadata is refreshed/replaced, not only on movie delete.
+            // Requires adding MovieMetadataDeletedEvent to the metadata lifecycle.
             _translationRepo.DeleteForMovies(message.Movies.Select(m => m.MovieMetadataId).ToList());
         }
     }

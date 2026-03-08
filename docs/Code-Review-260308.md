@@ -358,16 +358,14 @@ SQL parameterised in `MovieRepository`, `MediaBrowserProxy.CheckForError` cleane
 - **#38**: 4 new edge-case tests added to `MovieFolderPathBuilderFixture.cs` (null/empty root folder, non-parent path fallback, empty path with useExisting)
 - **#37**: 9 new unit tests in `CalendarFeedControllerFixture.cs` (content type, events, bounds clamping, negative days, unknown tags, null fields, no-date skip, release type filter)
 
-### Batch G — Medium-effort improvements (independent, do in any order)
+### Batch G — Medium-effort improvements ✅ DONE
 
-| Order | # | What | Files |
-|-------|---|------|-------|
-| 30 | #26 | Convert `MovieController` to async/await | `MovieController.cs` |
-| 31 | #29 | Convert `RssSyncService`/`MoviesSearchService` to async | Multiple files |
-| 32 | #21 | Use unique OAuth callback name per flow | `oAuthActions.js`, `oauth.html` |
-| 33 | #30 | Extract shared action creator handler wrapper | `Store/Actions/Creators/` |
-| 34 | #7 | Implement or remove `MatchesFolderSpecification` | `MatchesFolderSpecification.cs` |
-| 35 | #42 | Implement metadata delete handling or document as debt | `AlternativeTitleService.cs`, `MovieTranslationService.cs` |
+- **#26**: `MovieController.AllMovie` converted to `async Task<>`, `GetAwaiter().GetResult()` replaced with `await`
+- **#29**: SKIP — `IExecute<T>` interface only supports `void Execute()`; converting requires command pipeline infrastructure changes (deferred)
+- **#21**: OAuth callbacks now use per-flow nonce via `window._oauthCallbacks[nonce]`; `oauth.html` updated to look up callback by `window.name`; backwards-compatible fallback retained
+- **#30**: SKIP — critical abort-null-check fix already done in Batch B; remaining structural extraction is low ROI with regression risk across 8 core Redux files
+- **#7**: `MatchesFolderSpecification` removed — dead Sonarr-fork code that always returned Accept with commented-out episode-matching logic; test fixture also removed
+- **#42**: Documented as known debt — both `AlternativeTitleService` and `MovieTranslationService` TODO comments replaced with explanation of needed `MovieMetadataDeletedEvent`
 
 ### Deferred to v6 (no action now)
 

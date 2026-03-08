@@ -119,7 +119,9 @@ namespace NzbDrone.Core.Movies.AlternativeTitles
 
         public void HandleAsync(MoviesDeletedEvent message)
         {
-            // TODO handle metadata delete instead of movie delete
+            // Known debt: ideally listens for a MovieMetadataDeletedEvent so orphaned
+            // titles are cleaned up when metadata is refreshed/replaced, not only on movie delete.
+            // Requires adding MovieMetadataDeletedEvent to the metadata lifecycle.
             _titleRepo.DeleteForMovies(message.Movies.Select(m => m.MovieMetadataId).ToList());
         }
     }

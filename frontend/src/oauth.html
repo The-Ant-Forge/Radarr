@@ -4,7 +4,12 @@
     <meta charset="utf-8">
     <title>OAuth landing page</title>
     <script><!--
-    	window.opener.onCompleteOauth(window.location.search, function() { window.close(); });
+    	var callback = window.opener._oauthCallbacks && window.opener._oauthCallbacks[window.name];
+    	if (callback) {
+    		callback(window.location.search, function() { window.close(); });
+    	} else if (window.opener.onCompleteOauth) {
+    		window.opener.onCompleteOauth(window.location.search, function() { window.close(); });
+    	}
     --></script>
   </head>
   <body>
