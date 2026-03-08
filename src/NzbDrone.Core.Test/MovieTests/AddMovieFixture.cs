@@ -7,6 +7,7 @@ using FluentValidation;
 using FluentValidation.Results;
 using Moq;
 using NUnit.Framework;
+using NzbDrone.Core.Configuration;
 using NzbDrone.Core.Exceptions;
 using NzbDrone.Core.MetadataSource;
 using NzbDrone.Core.Movies;
@@ -128,6 +129,27 @@ namespace NzbDrone.Core.Test.MovieTests
             Assert.Throws<ValidationException>(() => Subject.AddMovie(newMovie));
 
             ExceptionVerification.ExpectedErrors(1);
+        }
+
+        [Test]
+        public void should_set_path_to_root_when_place_in_root_folder_enabled()
+        {
+            var newMovie = new Movie
+            {
+                TmdbId = 1,
+                RootFolderPath = @"C:\Test\Movies"
+            };
+
+            Mocker.GetMock<IConfigService>()
+                  .Setup(s => s.PlaceInRootFolder)
+                  .Returns(true);
+
+            GivenValidMovie(newMovie.TmdbId);
+            GivenValidPath();
+
+            var movie = Subject.AddMovie(newMovie);
+
+            movie.Path.Should().Be(newMovie.RootFolderPath);
         }
     }
 }

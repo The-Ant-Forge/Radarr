@@ -173,13 +173,30 @@ function MediaManagement() {
                   isAdvanced={true}
                   size={sizes.MEDIUM}
                 >
+                  <FormLabel>{translate('PlaceInRootFolder')}</FormLabel>
+
+                  <FormInputGroup
+                    type={inputTypes.CHECK}
+                    name="placeInRootFolder"
+                    helpText={translate('PlaceInRootFolderHelpText')}
+                    onChange={handleInputChange}
+                    {...settings.placeInRootFolder}
+                  />
+                </FormGroup>
+
+                <FormGroup
+                  advancedSettings={showAdvancedSettings}
+                  isAdvanced={true}
+                  size={sizes.MEDIUM}
+                >
                   <FormLabel>{translate('CreateEmptyMovieFolders')}</FormLabel>
 
                   <FormInputGroup
                     type={inputTypes.CHECK}
                     isDisabled={
-                      settings.deleteEmptyFolders.value &&
-                      !settings.createEmptyMovieFolders.value
+                      settings.placeInRootFolder.value ||
+                      (settings.deleteEmptyFolders.value &&
+                      !settings.createEmptyMovieFolders.value)
                     }
                     name="createEmptyMovieFolders"
                     helpText={translate('CreateEmptyMovieFoldersHelpText')}

@@ -31,6 +31,7 @@ namespace NzbDrone.Core.Configuration
         ProperDownloadTypes DownloadPropersAndRepacks { get; set; }
         bool CreateEmptyMovieFolders { get; set; }
         bool DeleteEmptyFolders { get; set; }
+        bool PlaceInRootFolder { get; set; }
         FileDateType FileDate { get; set; }
         bool SkipFreeSpaceCheckWhenImporting { get; set; }
         int MinimumFreeSpaceWhenImporting { get; set; }

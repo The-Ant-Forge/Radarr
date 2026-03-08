@@ -211,6 +211,13 @@ namespace NzbDrone.Core.Configuration
             set { SetValue("DeleteEmptyFolders", value); }
         }
 
+        public bool PlaceInRootFolder
+        {
+            get { return GetValueBoolean("PlaceInRootFolder", false); }
+
+            set { SetValue("PlaceInRootFolder", value); }
+        }
+
         public FileDateType FileDate
         {
             get { return GetValueEnum("FileDate", FileDateType.None); }

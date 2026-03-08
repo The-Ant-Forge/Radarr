@@ -180,6 +180,12 @@ namespace NzbDrone.Core.MediaFiles
                 throw new RootFolderNotFoundException($"Root folder '{rootFolder}' was not found.");
             }
 
+            // When PlaceInRootFolder is enabled, movie.Path == rootFolder so no subfolder needed
+            if (_configService.PlaceInRootFolder)
+            {
+                return;
+            }
+
             var changed = false;
             var newEvent = new MovieFolderCreatedEvent(movie, movieFile);
 

@@ -4,6 +4,7 @@ using Moq;
 using NUnit.Framework;
 using NzbDrone.Common.Disk;
 using NzbDrone.Common.Extensions;
+using NzbDrone.Core.Configuration;
 using NzbDrone.Core.MediaFiles;
 using NzbDrone.Core.MediaFiles.Events;
 using NzbDrone.Core.Messaging.Events;
@@ -108,6 +109,22 @@ namespace NzbDrone.Core.Test.MediaFiles.MovieFileMovingServiceTests
             Mocker.GetMock<IEventAggregator>()
                   .Verify(s => s.PublishEvent<MovieFolderCreatedEvent>(It.Is<MovieFolderCreatedEvent>(p =>
                       p.MovieFolder.IsNotNullOrWhiteSpace())), Times.Never());
+        }
+
+        [Test]
+        public void should_skip_folder_creation_when_place_in_root_folder_enabled()
+        {
+            Mocker.GetMock<IConfigService>()
+                  .Setup(s => s.PlaceInRootFolder)
+                  .Returns(true);
+
+            Subject.MoveMovieFile(_movieFile, _localMovie);
+
+            Mocker.GetMock<IDiskProvider>()
+                  .Verify(s => s.CreateFolder(It.IsAny<string>()), Times.Never());
+
+            Mocker.GetMock<IEventAggregator>()
+                  .Verify(s => s.PublishEvent(It.IsAny<MovieFolderCreatedEvent>()), Times.Never());
         }
     }
 }

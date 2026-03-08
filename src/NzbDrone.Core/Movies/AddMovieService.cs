@@ -7,6 +7,7 @@ using FluentValidation.Results;
 using NLog;
 using NzbDrone.Common.EnsureThat;
 using NzbDrone.Common.Extensions;
+using NzbDrone.Core.Configuration;
 using NzbDrone.Core.Exceptions;
 using NzbDrone.Core.MetadataSource;
 using NzbDrone.Core.Organizer;
@@ -27,6 +28,7 @@ namespace NzbDrone.Core.Movies
         private readonly IProvideMovieInfo _movieInfo;
         private readonly IBuildFileNames _fileNameBuilder;
         private readonly IAddMovieValidator _addMovieValidator;
+        private readonly IConfigService _configService;
         private readonly Logger _logger;
 
         public AddMovieService(IMovieService movieService,
@@ -34,6 +36,7 @@ namespace NzbDrone.Core.Movies
                                 IProvideMovieInfo movieInfo,
                                 IBuildFileNames fileNameBuilder,
                                 IAddMovieValidator addMovieValidator,
+                                IConfigService configService,
                                 Logger logger)
         {
             _movieService = movieService;
@@ -41,6 +44,7 @@ namespace NzbDrone.Core.Movies
             _movieInfo = movieInfo;
             _fileNameBuilder = fileNameBuilder;
             _addMovieValidator = addMovieValidator;
+            _configService = configService;
             _logger = logger;
         }
 
@@ -132,8 +136,15 @@ namespace NzbDrone.Core.Movies
         {
             if (string.IsNullOrWhiteSpace(newMovie.Path))
             {
-                var folderName = _fileNameBuilder.GetMovieFolder(newMovie);
-                newMovie.Path = Path.Combine(newMovie.RootFolderPath, folderName);
+                if (_configService.PlaceInRootFolder)
+                {
+                    newMovie.Path = newMovie.RootFolderPath;
+                }
+                else
+                {
+                    var folderName = _fileNameBuilder.GetMovieFolder(newMovie);
+                    newMovie.Path = Path.Combine(newMovie.RootFolderPath, folderName);
+                }
             }
 
             newMovie.MovieMetadata.Value.CleanTitle = newMovie.Title.CleanMovieTitle();

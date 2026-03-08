@@ -1485,6 +1485,8 @@
   "Permissions": "Permissions",
   "PhysicalRelease": "Physical Release",
   "PhysicalReleaseDate": "Physical Release Date",
+  "PlaceInRootFolder": "Do Not Create Movie Folders",
+  "PlaceInRootFolderHelpText": "Have Radarr place the movie in the root folder instead of a subfolder of the same name",
   "Popular": "Popular",
   "Popularity": "Popularity",
   "PopularityIndex": "Current Popularity Index",

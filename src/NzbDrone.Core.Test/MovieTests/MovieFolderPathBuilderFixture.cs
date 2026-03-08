@@ -3,6 +3,7 @@ using FizzWare.NBuilder;
 using FluentAssertions;
 using Moq;
 using NUnit.Framework;
+using NzbDrone.Core.Configuration;
 using NzbDrone.Core.Movies;
 using NzbDrone.Core.Organizer;
 using NzbDrone.Core.RootFolders;
@@ -89,6 +90,37 @@ namespace NzbDrone.Core.Test.MovieTests
             _movie.Path = null;
 
             Subject.BuildPath(_movie, true).Should().Be(Path.Combine(rootFolder, _movie.Title));
+        }
+
+        [Test]
+        public void should_return_root_folder_when_place_in_root_folder_enabled()
+        {
+            var rootFolder = @"C:\Test\Movies2".AsOsAgnostic();
+
+            Mocker.GetMock<IConfigService>()
+                  .Setup(s => s.PlaceInRootFolder)
+                  .Returns(true);
+
+            GivenMovieFolderName(_movie.Title);
+            _movie.RootFolderPath = rootFolder;
+
+            Subject.BuildPath(_movie, false).Should().Be(rootFolder);
+        }
+
+        [Test]
+        public void should_return_root_folder_when_place_in_root_folder_enabled_ignoring_existing_relative()
+        {
+            var rootFolder = @"C:\Test\Movies2".AsOsAgnostic();
+
+            Mocker.GetMock<IConfigService>()
+                  .Setup(s => s.PlaceInRootFolder)
+                  .Returns(true);
+
+            GivenExistingRootFolder(Path.GetDirectoryName(_movie.Path));
+            GivenMovieFolderName(_movie.Title);
+            _movie.RootFolderPath = rootFolder;
+
+            Subject.BuildPath(_movie, true).Should().Be(rootFolder);
         }
     }
 }

@@ -2,6 +2,7 @@
 using System.IO;
 using NLog;
 using NzbDrone.Common.Extensions;
+using NzbDrone.Core.Configuration;
 using NzbDrone.Core.Organizer;
 using NzbDrone.Core.RootFolders;
 
@@ -16,12 +17,14 @@ namespace NzbDrone.Core.Movies
     {
         private readonly IBuildFileNames _fileNameBuilder;
         private readonly IRootFolderService _rootFolderService;
+        private readonly IConfigService _configService;
         private readonly Logger _logger;
 
-        public MoviePathBuilder(IBuildFileNames fileNameBuilder, IRootFolderService rootFolderService, Logger logger)
+        public MoviePathBuilder(IBuildFileNames fileNameBuilder, IRootFolderService rootFolderService, IConfigService configService, Logger logger)
         {
             _fileNameBuilder = fileNameBuilder;
             _rootFolderService = rootFolderService;
+            _configService = configService;
             _logger = logger;
         }
 
@@ -30,6 +33,11 @@ namespace NzbDrone.Core.Movies
             if (movie.RootFolderPath.IsNullOrWhiteSpace())
             {
                 throw new ArgumentException("Root folder was not provided", nameof(movie));
+            }
+
+            if (_configService.PlaceInRootFolder)
+            {
+                return movie.RootFolderPath;
             }
 
             if (useExistingRelativeFolder && movie.Path.IsNotNullOrWhiteSpace())

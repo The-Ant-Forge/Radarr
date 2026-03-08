@@ -5,6 +5,7 @@ export default interface MediaManagement {
   downloadPropersAndRepacks: string;
   createEmptyMovieFolders: boolean;
   deleteEmptyFolders: boolean;
+  placeInRootFolder: boolean;
   fileDate: string;
   rescanAfterRefresh: string;
   setPermissionsLinux: boolean;

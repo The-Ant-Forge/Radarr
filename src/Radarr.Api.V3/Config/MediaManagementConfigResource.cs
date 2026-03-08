@@ -13,6 +13,7 @@ namespace Radarr.Api.V3.Config
         public ProperDownloadTypes DownloadPropersAndRepacks { get; set; }
         public bool CreateEmptyMovieFolders { get; set; }
         public bool DeleteEmptyFolders { get; set; }
+        public bool PlaceInRootFolder { get; set; }
         public FileDateType FileDate { get; set; }
         public RescanAfterRefreshType RescanAfterRefresh { get; set; }
         public bool AutoRenameFolders { get; set; }
@@ -44,6 +45,7 @@ namespace Radarr.Api.V3.Config
                 DownloadPropersAndRepacks = model.DownloadPropersAndRepacks,
                 CreateEmptyMovieFolders = model.CreateEmptyMovieFolders,
                 DeleteEmptyFolders = model.DeleteEmptyFolders,
+                PlaceInRootFolder = model.PlaceInRootFolder,
                 FileDate = model.FileDate,
                 RescanAfterRefresh = model.RescanAfterRefresh,
                 AutoRenameFolders = model.AutoRenameFolders,
