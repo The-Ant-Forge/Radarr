@@ -119,7 +119,7 @@ namespace Radarr.Api.V3.Movies
             var moviesResources = new List<MovieResource>();
 
             var translationLanguage = languageId is > 0
-                ? Language.All.Single(l => l.Id == languageId.Value)
+                ? (Language.All.FirstOrDefault(l => l.Id == languageId.Value) ?? throw new BadRequestException($"Invalid languageId: {languageId.Value}"))
                 : (Language)_configService.MovieInfoLanguage;
 
             if (tmdbId.HasValue)

@@ -1,5 +1,3 @@
-import qs from 'qs';
-
 // See: https://developer.mozilla.org/en-US/docs/Web/API/HTMLHyperlinkElementUtils
 const anchor = document.createElement('a');
 
@@ -25,7 +23,7 @@ export default function parseUrl(url) {
 
   if (properties.search) {
     // Remove leading ? from querystring before parsing.
-    properties.params = qs.parse(properties.search.substring(1));
+    properties.params = Object.fromEntries(new URLSearchParams(properties.search));
   } else {
     properties.params = {};
   }

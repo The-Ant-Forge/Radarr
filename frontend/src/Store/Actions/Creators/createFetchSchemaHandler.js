@@ -24,7 +24,7 @@ function createFetchSchemaHandler(section, url) {
         section,
         isSchemaFetching: false,
         isSchemaPopulated: true,
-        schemaError: xhr
+        schemaError: xhr.aborted ? null : xhr
       }));
     });
   };

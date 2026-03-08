@@ -43,7 +43,7 @@ function createBulkEditItemHandler(section, url) {
       dispatch(set({
         section,
         isSaving: false,
-        saveError: xhr
+        saveError: xhr.aborted ? null : xhr
       }));
     });
 

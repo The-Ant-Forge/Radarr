@@ -28,13 +28,26 @@ namespace Radarr.Api.V3.Calendar
         [HttpGet("Radarr.ics")]
         public IActionResult GetCalendarFeed(int pastDays = 7, int futureDays = 28, string tags = "", bool unmonitored = false, IReadOnlyCollection<CalendarReleaseType> releaseTypes = null)
         {
+            pastDays = Math.Clamp(pastDays, 0, 365);
+            futureDays = Math.Clamp(futureDays, 0, 365);
+
             var start = DateTime.Today.AddDays(-pastDays);
             var end = DateTime.Today.AddDays(futureDays);
             var parsedTags = new List<int>();
 
             if (tags.IsNotNullOrWhiteSpace())
             {
-                parsedTags.AddRange(tags.Split(',').Select(_tagService.GetTag).Select(t => t.Id));
+                foreach (var tagName in tags.Split(','))
+                {
+                    try
+                    {
+                        parsedTags.Add(_tagService.GetTag(tagName).Id);
+                    }
+                    catch
+                    {
+                        // Skip unknown tags rather than failing the entire feed
+                    }
+                }
             }
 
             var movies = _movieService.GetMoviesBetweenDates(start, end, unmonitored);
@@ -104,12 +117,10 @@ namespace Radarr.Api.V3.Calendar
             occurrence.Uid = "Radarr_movie_" + movie.Id + eventType;
             occurrence.Status = movie.Status == MovieStatusType.Announced ? EventStatus.Tentative : EventStatus.Confirmed;
 
-            occurrence.Start = new CalDateTime(date.Value);
-            occurrence.End = occurrence.Start;
-            occurrence.IsAllDay = true;
+            occurrence.Start = new CalDateTime(date.Value.Year, date.Value.Month, date.Value.Day);
 
-            occurrence.Description = movie.Overview;
-            occurrence.Categories = new List<string> { movie.Studio };
+            occurrence.Description = movie.Overview ?? string.Empty;
+            occurrence.Categories = new List<string> { movie.Studio ?? string.Empty };
 
             occurrence.Summary = $"{movie.Title} {summaryText}";
         }

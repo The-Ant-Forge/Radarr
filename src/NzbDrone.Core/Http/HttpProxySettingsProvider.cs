@@ -1,7 +1,6 @@
 using System;
 using System.Linq;
 using System.Net;
-using NetTools;
 using NzbDrone.Common.Http;
 using NzbDrone.Common.Http.Proxy;
 using NzbDrone.Core.Configuration;
@@ -59,10 +58,67 @@ namespace NzbDrone.Core.Http
 
         private static bool IsBypassedByIpAddressRange(string[] bypassList, string host)
         {
-            return bypassList.Any(bypass =>
-                IPAddressRange.TryParse(bypass, out var ipAddressRange) &&
-                IPAddress.TryParse(host, out var ipAddress) &&
-                ipAddressRange.Contains(ipAddress));
+            if (!IPAddress.TryParse(host, out var hostAddress))
+            {
+                return false;
+            }
+
+            return bypassList.Any(bypass => IsInCidrRange(hostAddress, bypass));
+        }
+
+        private static bool IsInCidrRange(IPAddress address, string cidr)
+        {
+            var slashIndex = cidr.IndexOf('/');
+            if (slashIndex < 0)
+            {
+                return IPAddress.TryParse(cidr, out var exact) && exact.Equals(address);
+            }
+
+            if (!IPAddress.TryParse(cidr.Substring(0, slashIndex), out var network))
+            {
+                return false;
+            }
+
+            if (!int.TryParse(cidr.Substring(slashIndex + 1), out var prefixLength))
+            {
+                return false;
+            }
+
+            var networkBytes = network.GetAddressBytes();
+            var maxPrefix = networkBytes.Length * 8;
+
+            if (prefixLength < 0 || prefixLength > maxPrefix)
+            {
+                return false;
+            }
+            var addressBytes = address.GetAddressBytes();
+
+            if (networkBytes.Length != addressBytes.Length)
+            {
+                return false;
+            }
+
+            var fullBytes = prefixLength / 8;
+            var remainingBits = prefixLength % 8;
+
+            for (var i = 0; i < fullBytes; i++)
+            {
+                if (networkBytes[i] != addressBytes[i])
+                {
+                    return false;
+                }
+            }
+
+            if (remainingBits > 0 && fullBytes < networkBytes.Length)
+            {
+                var mask = (byte)(0xFF << (8 - remainingBits));
+                if ((networkBytes[fullBytes] & mask) != (addressBytes[fullBytes] & mask))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }

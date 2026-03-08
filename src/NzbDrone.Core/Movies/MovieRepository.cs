@@ -263,11 +263,16 @@ namespace NzbDrone.Core.Movies
             return pagingSpec;
         }
 
-        public SqlBuilder MoviesWhereCutoffUnmetBuilder(List<QualitiesBelowCutoff> qualitiesBelowCutoff) => Builder()
-            .Where<Movie>(x => x.MovieFileId != 0)
-            .Where(BuildQualityCutoffWhereClause(qualitiesBelowCutoff))
-            .GroupBy<Movie>(m => m.Id)
-            .GroupBy<MovieMetadata>(m => m.Id);
+        public SqlBuilder MoviesWhereCutoffUnmetBuilder(List<QualitiesBelowCutoff> qualitiesBelowCutoff)
+        {
+            var (sql, parameters) = BuildQualityCutoffWhereClause(qualitiesBelowCutoff);
+
+            return Builder()
+                .Where<Movie>(x => x.MovieFileId != 0)
+                .Where(sql, parameters)
+                .GroupBy<Movie>(m => m.Id)
+                .GroupBy<MovieMetadata>(m => m.Id);
+        }
 
         public PagingSpec<Movie> MoviesWhereCutoffUnmet(PagingSpec<Movie> pagingSpec, List<QualitiesBelowCutoff> qualitiesBelowCutoff)
         {
@@ -277,19 +282,28 @@ namespace NzbDrone.Core.Movies
             return pagingSpec;
         }
 
-        private string BuildQualityCutoffWhereClause(List<QualitiesBelowCutoff> qualitiesBelowCutoff)
+        private (string Sql, DynamicParameters Parameters) BuildQualityCutoffWhereClause(List<QualitiesBelowCutoff> qualitiesBelowCutoff)
         {
             var clauses = new List<string>();
+            var parameters = new DynamicParameters();
+            var index = 0;
 
             foreach (var profile in qualitiesBelowCutoff)
             {
                 foreach (var belowCutoff in profile.QualityIds)
                 {
-                    clauses.Add(string.Format($"(\"{_table}\".\"QualityProfileId\" = {profile.ProfileId} AND \"MovieFiles\".\"Quality\" LIKE '%_quality_: {belowCutoff},%')"));
+                    var profileParam = $"@Profile{index}";
+                    var qualityPattern = $"@Quality{index}";
+
+                    clauses.Add($"(\"{_table}\".\"QualityProfileId\" = {profileParam} AND \"MovieFiles\".\"Quality\" LIKE {qualityPattern})");
+                    parameters.Add($"Profile{index}", profile.ProfileId);
+                    parameters.Add($"Quality{index}", $"%_quality_: {belowCutoff},%");
+
+                    index++;
                 }
             }
 
-            return string.Format("({0})", string.Join(" OR ", clauses));
+            return ($"({string.Join(" OR ", clauses)})", parameters);
         }
 
         public Movie FindByPath(string path)

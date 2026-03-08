@@ -167,9 +167,7 @@ namespace NzbDrone.Core.Notifications.Emby
 
         private void CheckForError(HttpResponse response)
         {
-            _logger.Debug("Looking for error in response: {0}", response);
-
-            // TODO: actually check for the error
+            _logger.Trace("Emby/Jellyfin HTTP {0}", (int)response.StatusCode);
         }
     }
 }

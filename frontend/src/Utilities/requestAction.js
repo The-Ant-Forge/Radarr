@@ -1,6 +1,6 @@
-import $ from 'jquery';
 import _ from 'lodash';
 import createAjaxRequest from './createAjaxRequest';
+import urlParams from './urlParams';
 
 function flattenProviderData(providerData) {
   return _.reduce(Object.keys(providerData), (result, key) => {
@@ -32,7 +32,7 @@ function requestAction(payload) {
   };
 
   if (queryParams) {
-    ajaxOptions.url += `?${$.param(queryParams, true)}`;
+    ajaxOptions.url += `?${urlParams(queryParams)}`;
   }
 
   return createAjaxRequest(ajaxOptions).request;

@@ -18,6 +18,12 @@ namespace NzbDrone.Core.Notifications.Discord
 {
     public class Discord : NotificationBase<DiscordSettings>
     {
+        private const string RadarrIconUrl = "https://raw.githubusercontent.com/Radarr/Radarr/develop/Logo/256.png";
+        private const string TimestampFormat = "yyyy-MM-ddTHH:mm:ss.fffZ";
+        private const int MaxOverviewLength = 300;
+        private const int MaxTitleLength = 256;
+        private const int MaxGenresOrTags = 5;
+
         private readonly IDiscordProxy _proxy;
         private readonly ITagRepository _tagRepository;
         private readonly IConfigFileProvider _configFileProvider;
@@ -41,14 +47,14 @@ namespace NzbDrone.Core.Notifications.Discord
                 Author = new DiscordAuthor
                 {
                     Name = Settings.Author.IsNullOrWhiteSpace() ? _configFileProvider.InstanceName : Settings.Author,
-                    IconUrl = "https://raw.githubusercontent.com/Radarr/Radarr/develop/Logo/256.png"
+                    IconUrl = RadarrIconUrl
                 },
                 Url = $"https://www.themoviedb.org/movie/{message.Movie.MovieMetadata.Value.TmdbId}",
                 Description = "Movie Grabbed",
                 Title = GetTitle(message.Movie),
                 Color = (int)DiscordColors.Standard,
                 Fields = new List<DiscordField>(),
-                Timestamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
+                Timestamp = DateTime.UtcNow.ToString(TimestampFormat)
             };
 
             if (Settings.GrabFields.Contains((int)DiscordGrabFieldType.Poster))
@@ -76,7 +82,7 @@ namespace NzbDrone.Core.Notifications.Discord
                     case DiscordGrabFieldType.Overview:
                         var overview = message.Movie.MovieMetadata.Value.Overview ?? "";
                         discordField.Name = "Overview";
-                        discordField.Value = overview.Length <= 300 ? overview : $"{overview.AsSpan(0, 300)}...";
+                        discordField.Value = Truncate(overview, MaxOverviewLength);
                         break;
                     case DiscordGrabFieldType.Rating:
                         discordField.Name = "Rating";
@@ -84,7 +90,7 @@ namespace NzbDrone.Core.Notifications.Discord
                         break;
                     case DiscordGrabFieldType.Genres:
                         discordField.Name = "Genres";
-                        discordField.Value = message.Movie.MovieMetadata.Value.Genres.Take(5).Join(", ");
+                        discordField.Value = message.Movie.MovieMetadata.Value.Genres.Take(MaxGenresOrTags).Join(", ");
                         break;
                     case DiscordGrabFieldType.Quality:
                         discordField.Name = "Quality";
@@ -145,14 +151,14 @@ namespace NzbDrone.Core.Notifications.Discord
                 Author = new DiscordAuthor
                 {
                     Name = Settings.Author.IsNullOrWhiteSpace() ? _configFileProvider.InstanceName : Settings.Author,
-                    IconUrl = "https://raw.githubusercontent.com/Radarr/Radarr/develop/Logo/256.png"
+                    IconUrl = RadarrIconUrl
                 },
                 Url = $"https://www.themoviedb.org/movie/{message.Movie.MovieMetadata.Value.TmdbId}",
                 Description = isUpgrade ? "Movie Upgraded" : "Movie Imported",
                 Title = GetTitle(message.Movie),
                 Color = isUpgrade ? (int)DiscordColors.Upgrade : (int)DiscordColors.Success,
                 Fields = new List<DiscordField>(),
-                Timestamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
+                Timestamp = DateTime.UtcNow.ToString(TimestampFormat)
             };
 
             if (Settings.ImportFields.Contains((int)DiscordImportFieldType.Poster))
@@ -180,7 +186,7 @@ namespace NzbDrone.Core.Notifications.Discord
                     case DiscordImportFieldType.Overview:
                         var overview = message.Movie.MovieMetadata.Value.Overview ?? "";
                         discordField.Name = "Overview";
-                        discordField.Value = overview.Length <= 300 ? overview : $"{overview.AsSpan(0, 300)}...";
+                        discordField.Value = Truncate(overview, MaxOverviewLength);
                         break;
                     case DiscordImportFieldType.Rating:
                         discordField.Name = "Rating";
@@ -188,7 +194,7 @@ namespace NzbDrone.Core.Notifications.Discord
                         break;
                     case DiscordImportFieldType.Genres:
                         discordField.Name = "Genres";
-                        discordField.Value = message.Movie.MovieMetadata.Value.Genres.Take(5).Join(", ");
+                        discordField.Value = message.Movie.MovieMetadata.Value.Genres.Take(MaxGenresOrTags).Join(", ");
                         break;
                     case DiscordImportFieldType.Quality:
                         discordField.Name = "Quality";
@@ -260,7 +266,7 @@ namespace NzbDrone.Core.Notifications.Discord
                 Author = new DiscordAuthor
                 {
                     Name = Settings.Author.IsNullOrWhiteSpace() ? _configFileProvider.InstanceName : Settings.Author,
-                    IconUrl = "https://raw.githubusercontent.com/Radarr/Radarr/develop/Logo/256.png"
+                    IconUrl = RadarrIconUrl
                 },
                 Url = $"https://www.themoviedb.org/movie/{movie.MovieMetadata.Value.TmdbId}",
                 Title = movie.Title,
@@ -317,7 +323,7 @@ namespace NzbDrone.Core.Notifications.Discord
                 Author = new DiscordAuthor
                 {
                     Name = Settings.Author.IsNullOrWhiteSpace() ? _configFileProvider.InstanceName : Settings.Author,
-                    IconUrl = "https://raw.githubusercontent.com/Radarr/Radarr/develop/Logo/256.png"
+                    IconUrl = RadarrIconUrl
                 },
                 Url = $"https://www.themoviedb.org/movie/{movie.MovieMetadata.Value.TmdbId}",
                 Title = movie.Title,
@@ -358,7 +364,7 @@ namespace NzbDrone.Core.Notifications.Discord
                 Author = new DiscordAuthor
                 {
                     Name = Settings.Author.IsNullOrWhiteSpace() ? _configFileProvider.InstanceName : Settings.Author,
-                    IconUrl = "https://raw.githubusercontent.com/Radarr/Radarr/develop/Logo/256.png"
+                    IconUrl = RadarrIconUrl
                 },
                 Url = $"https://www.themoviedb.org/movie/{movie.MovieMetadata.Value.TmdbId}",
                 Title = GetTitle(movie),
@@ -369,7 +375,7 @@ namespace NzbDrone.Core.Notifications.Discord
                     new () { Name = "Reason", Value = reason.ToString() },
                     new () { Name = "File name", Value = string.Format("```{0}```", deletedFile) }
                 },
-                Timestamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
+                Timestamp = DateTime.UtcNow.ToString(TimestampFormat),
             };
 
             var payload = CreatePayload(null, new List<Embed> { embed });
@@ -384,11 +390,11 @@ namespace NzbDrone.Core.Notifications.Discord
                 Author = new DiscordAuthor
                 {
                     Name = Settings.Author.IsNullOrWhiteSpace() ? _configFileProvider.InstanceName : Settings.Author,
-                    IconUrl = "https://raw.githubusercontent.com/Radarr/Radarr/develop/Logo/256.png"
+                    IconUrl = RadarrIconUrl
                 },
                 Title = healthCheck.Source.Name,
                 Description = healthCheck.Message,
-                Timestamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
+                Timestamp = DateTime.UtcNow.ToString(TimestampFormat),
                 Color = healthCheck.Type == HealthCheck.HealthCheckResult.Warning ? (int)DiscordColors.Warning : (int)DiscordColors.Danger
             };
 
@@ -404,11 +410,11 @@ namespace NzbDrone.Core.Notifications.Discord
                 Author = new DiscordAuthor
                 {
                     Name = Settings.Author.IsNullOrWhiteSpace() ? _configFileProvider.InstanceName : Settings.Author,
-                    IconUrl = "https://raw.githubusercontent.com/Radarr/Radarr/develop/Logo/256.png"
+                    IconUrl = RadarrIconUrl
                 },
                 Title = "Health Issue Resolved: " + previousCheck.Source.Name,
                 Description = $"The following issue is now resolved: {previousCheck.Message}",
-                Timestamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
+                Timestamp = DateTime.UtcNow.ToString(TimestampFormat),
                 Color = (int)DiscordColors.Success
             };
 
@@ -424,10 +430,10 @@ namespace NzbDrone.Core.Notifications.Discord
                 Author = new DiscordAuthor
                 {
                     Name = Settings.Author.IsNullOrWhiteSpace() ? _configFileProvider.InstanceName : Settings.Author,
-                    IconUrl = "https://raw.githubusercontent.com/Radarr/Radarr/develop/Logo/256.png"
+                    IconUrl = RadarrIconUrl
                 },
                 Title = APPLICATION_UPDATE_TITLE,
-                Timestamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
+                Timestamp = DateTime.UtcNow.ToString(TimestampFormat),
                 Color = (int)DiscordColors.Standard,
                 Fields = new List<DiscordField>
                 {
@@ -458,14 +464,14 @@ namespace NzbDrone.Core.Notifications.Discord
                 Author = new DiscordAuthor
                 {
                     Name = Settings.Author.IsNullOrWhiteSpace() ? _configFileProvider.InstanceName : Settings.Author,
-                    IconUrl = "https://raw.githubusercontent.com/Radarr/Radarr/develop/Logo/256.png"
+                    IconUrl = RadarrIconUrl
                 },
                 Url = movie?.MovieMetadata.Value.TmdbId > 0 ? $"https://www.themoviedb.org/movie/{movie.MovieMetadata.Value.TmdbId}" : null,
                 Description = "Manual interaction needed",
                 Title = GetTitle(movie),
                 Color = (int)DiscordColors.Standard,
                 Fields = new List<DiscordField>(),
-                Timestamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
+                Timestamp = DateTime.UtcNow.ToString(TimestampFormat)
             };
 
             if (Settings.ManualInteractionFields.Contains((int)DiscordManualInteractionFieldType.Poster))
@@ -493,7 +499,7 @@ namespace NzbDrone.Core.Notifications.Discord
                     case DiscordManualInteractionFieldType.Overview:
                         var overview = movie?.MovieMetadata?.Value?.Overview ?? "";
                         discordField.Name = "Overview";
-                        discordField.Value = overview.Length <= 300 ? overview : $"{overview.AsSpan(0, 300)}...";
+                        discordField.Value = Truncate(overview, MaxOverviewLength);
                         break;
                     case DiscordManualInteractionFieldType.Rating:
                         discordField.Name = "Rating";
@@ -501,7 +507,7 @@ namespace NzbDrone.Core.Notifications.Discord
                         break;
                     case DiscordManualInteractionFieldType.Genres:
                         discordField.Name = "Genres";
-                        discordField.Value = movie?.MovieMetadata?.Value?.Genres.Take(5).Join(", ");
+                        discordField.Value = movie?.MovieMetadata?.Value?.Genres.Take(MaxGenresOrTags).Join(", ");
                         break;
                     case DiscordManualInteractionFieldType.Quality:
                         discordField.Name = "Quality";
@@ -606,6 +612,11 @@ namespace NzbDrone.Core.Notifications.Discord
             return string.Format("{0} {1}", (Math.Sign(byteCount) * num).ToString(), suf[place]);
         }
 
+        private static string Truncate(string value, int maxLength)
+        {
+            return value.Length <= maxLength ? value : $"{value.AsSpan(0, maxLength)}...";
+        }
+
         private static string GetLinksString(Movie movie)
         {
             if (movie?.MovieMetadata?.Value == null)
@@ -646,7 +657,7 @@ namespace NzbDrone.Core.Notifications.Discord
 
             var title = (movie.MovieMetadata.Value.Year > 0 ? $"{movie.MovieMetadata.Value.Title} ({movie.MovieMetadata.Value.Year})" : movie.MovieMetadata.Value.Title).Replace("`", "\\`");
 
-            return title.Length > 256 ? $"{title.AsSpan(0, 253).TrimEnd('\\')}..." : title;
+            return title.Length > MaxTitleLength ? $"{title.AsSpan(0, MaxTitleLength - 3).TrimEnd('\\')}..." : title;
         }
 
         private List<string> GetTagLabels(Movie movie)
@@ -660,7 +671,7 @@ namespace NzbDrone.Core.Notifications.Discord
                 .Select(t => t.Label)
                 .Where(l => l.IsNotNullOrWhiteSpace())
                 .OrderBy(l => l)
-                .Take(5)
+                .Take(MaxGenresOrTags)
                 .ToList();
         }
     }

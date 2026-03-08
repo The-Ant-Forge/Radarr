@@ -7,15 +7,10 @@ namespace Radarr.Api.V3.Movies
 {
     public class AlternativeTitleResource : RestResource
     {
-        // Todo: Sorters should be done completely on the client
-        // Todo: Is there an easy way to keep IgnoreArticlesWhenSorting in sync between, Series, History, Missing?
-        // Todo: We should get the entire Profile instead of ID and Name separately
         public SourceType SourceType { get; set; }
         public int MovieMetadataId { get; set; }
         public string Title { get; set; }
         public string CleanTitle { get; set; }
-
-        // TODO: Add series statistics as a property of the series (instead of individual properties)
     }
 
     public static class AlternativeTitleResourceMapper

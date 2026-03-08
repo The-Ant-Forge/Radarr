@@ -5,7 +5,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Diacritical;
 using NLog;
 using NzbDrone.Common.EnsureThat;
 using NzbDrone.Common.Extensions;
@@ -208,7 +207,7 @@ namespace NzbDrone.Core.Organizer
             title = ScenifyReplaceChars.Replace(title, " ");
             title = ScenifyRemoveChars.Replace(title, string.Empty);
 
-            return title.RemoveDiacritics();
+            return title.RemoveAccent();
         }
 
         public static string TitleThe(string title)
@@ -241,13 +240,13 @@ namespace NzbDrone.Core.Organizer
         {
             if (char.IsLetterOrDigit(title[0]))
             {
-                return title.Substring(0, 1).ToUpper().RemoveDiacritics()[0].ToString();
+                return title.Substring(0, 1).ToUpper().RemoveAccent()[0].ToString();
             }
 
             // Try the second character if the first was non alphanumeric
             if (char.IsLetterOrDigit(title[1]))
             {
-                return title.Substring(1, 1).ToUpper().RemoveDiacritics()[0].ToString();
+                return title.Substring(1, 1).ToUpper().RemoveAccent()[0].ToString();
             }
 
             // Default to "_" if no alphanumeric character can be found in the first 2 positions

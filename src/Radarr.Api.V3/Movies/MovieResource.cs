@@ -23,10 +23,6 @@ namespace Radarr.Api.V3.Movies
             MinimumAvailability = MovieStatusType.Released;
         }
 
-        // Todo: Sorters should be done completely on the client
-        // Todo: Is there an easy way to keep IgnoreArticlesWhenSorting in sync between, Series, History, Missing?
-        // Todo: We should get the entire Profile instead of ID and Name separately
-
         // View Only
         public string Title { get; set; }
         public string OriginalTitle { get; set; }

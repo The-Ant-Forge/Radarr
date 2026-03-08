@@ -39,7 +39,7 @@ namespace NzbDrone.Core.Notifications.Slack
             catch (HttpException ex)
             {
                 _logger.Error(ex, "Unable to post payload {0}", payload);
-                throw new SlackExeption("Unable to post payload", ex);
+                throw new SlackException("Unable to post payload", ex);
             }
         }
     }

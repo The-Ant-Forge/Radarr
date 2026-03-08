@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using FizzWare.NBuilder;
 using FluentAssertions;
@@ -121,6 +122,54 @@ namespace NzbDrone.Core.Test.MovieTests
             _movie.RootFolderPath = rootFolder;
 
             Subject.BuildPath(_movie, true).Should().Be(rootFolder);
+        }
+
+        [Test]
+        public void should_throw_when_root_folder_is_null()
+        {
+            _movie.RootFolderPath = null;
+
+            Assert.Throws<ArgumentException>(() => Subject.BuildPath(_movie, false));
+        }
+
+        [Test]
+        public void should_throw_when_root_folder_is_empty()
+        {
+            _movie.RootFolderPath = string.Empty;
+
+            Assert.Throws<ArgumentException>(() => Subject.BuildPath(_movie, false));
+        }
+
+        [Test]
+        public void should_use_directory_name_when_root_folder_is_not_parent_of_movie_path()
+        {
+            var rootFolder = @"C:\Test\Movies2".AsOsAgnostic();
+            var unrelatedRoot = @"D:\Other\Root".AsOsAgnostic();
+
+            Mocker.GetMock<IRootFolderService>()
+                  .Setup(s => s.GetBestRootFolderPath(It.IsAny<string>(), null))
+                  .Returns(unrelatedRoot);
+
+            _movie.RootFolderPath = rootFolder;
+
+            var result = Subject.BuildPath(_movie, true);
+
+            // Falls back to last directory component from existing path
+            result.Should().Be(Path.Combine(rootFolder, "Movie.Title"));
+
+            ExceptionVerification.IgnoreWarns();
+        }
+
+        [Test]
+        public void should_use_built_path_when_existing_path_is_empty_and_use_existing_is_true()
+        {
+            var rootFolder = @"C:\Test\Movies2".AsOsAgnostic();
+
+            GivenMovieFolderName(_movie.Title);
+            _movie.RootFolderPath = rootFolder;
+            _movie.Path = string.Empty;
+
+            Subject.BuildPath(_movie, true).Should().Be(Path.Combine(rootFolder, _movie.Title));
         }
     }
 }

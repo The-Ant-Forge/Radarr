@@ -83,16 +83,14 @@ namespace NzbDrone.Core.CustomFormats
 
         public void Delete(List<int> ids)
         {
-            foreach (var id in ids)
+            var formats = _formatRepository.Get(ids);
+
+            foreach (var format in formats)
             {
-                var format = _formatRepository.Get(id);
-
-                // Remove from profiles before removing from DB
                 _eventAggregator.PublishEvent(new CustomFormatDeletedEvent(format));
-
-                _formatRepository.Delete(id);
             }
 
+            _formatRepository.DeleteMany(ids);
             _cache.Clear();
         }
     }

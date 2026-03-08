@@ -196,7 +196,7 @@ namespace NzbDrone.Core.Notifications.Slack
 
                 _proxy.SendPayload(payload, Settings);
             }
-            catch (SlackExeption ex)
+            catch (SlackException ex)
             {
                 return new NzbDroneValidationFailure("Unable to post", _localizationService.GetLocalizedString("NotificationsValidationUnableToSendTestMessage", new Dictionary<string, object> { { "exceptionMessage", ex.Message } }));
             }

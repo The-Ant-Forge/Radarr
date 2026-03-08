@@ -60,7 +60,7 @@ The backend solution is most easily built and ran in Visual Studio or Rider, how
 
 #### Visual Studio
 
-> Ensure startup project is set to `Radarr.Console` and framework to `net6.0`
+> Ensure startup project is set to `Radarr.Console` and framework to `net8.0`
 {.is-info}
 
 1. First `Build` the solution in Visual Studio, this will ensure all projects are correctly built and dependencies restored

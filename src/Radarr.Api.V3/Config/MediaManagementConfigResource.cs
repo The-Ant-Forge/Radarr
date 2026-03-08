@@ -17,7 +17,6 @@ namespace Radarr.Api.V3.Config
         public FileDateType FileDate { get; set; }
         public RescanAfterRefreshType RescanAfterRefresh { get; set; }
         public bool AutoRenameFolders { get; set; }
-        public bool PathsDefaultStatic { get; set; }
 
         public bool SetPermissionsLinux { get; set; }
         public string ChmodFolder { get; set; }

@@ -37,7 +37,7 @@ function createBulkRemoveItemHandler(section, url) {
       dispatch(set({
         section,
         isDeleting: false,
-        deleteError: xhr
+        deleteError: xhr.aborted ? null : xhr
       }));
     });
 

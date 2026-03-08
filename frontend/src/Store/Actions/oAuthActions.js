@@ -1,4 +1,3 @@
-import $ from 'jquery';
 import { createAction } from 'redux-actions';
 import { batchActions } from 'redux-batched-actions';
 import { set } from 'Store/Actions/baseActions';
@@ -43,7 +42,6 @@ export const resetOAuth = createAction(RESET_OAUTH);
 // Helpers
 
 function showOAuthWindow(url, payload) {
-  const deferred = $.Deferred();
   const selfWindow = window;
 
   const newWindow = window.open(url);
@@ -65,28 +63,48 @@ function showOAuthWindow(url, payload) {
       ]
     };
 
-    return deferred.reject(error).promise();
+    return Promise.reject(error);
   }
 
-  selfWindow.onCompleteOauth = function(query, onComplete) {
-    delete selfWindow.onCompleteOauth;
+  return new Promise((resolve, reject) => {
+    const pollInterval = setInterval(() => {
+      if (newWindow.closed) {
+        clearInterval(pollInterval);
+        delete selfWindow.onCompleteOauth;
 
-    const queryParams = {};
-    const splitQuery = query.substring(1).split('&');
+        const error = {
+          status: 400,
+          responseJSON: [
+            {
+              propertyName: payload.name,
+              errorMessage: translate('OAuthPopupMessage')
+            }
+          ]
+        };
 
-    splitQuery.forEach((param) => {
-      if (param) {
-        const paramSplit = param.split('=');
-
-        queryParams[paramSplit[0]] = paramSplit[1];
+        reject(error);
       }
-    });
+    }, 500);
 
-    onComplete();
-    deferred.resolve(queryParams);
-  };
+    selfWindow.onCompleteOauth = function(query, onComplete) {
+      clearInterval(pollInterval);
+      delete selfWindow.onCompleteOauth;
 
-  return deferred.promise();
+      const queryParams = {};
+      const splitQuery = query.substring(1).split('&');
+
+      splitQuery.forEach((param) => {
+        if (param) {
+          const paramSplit = param.split('=');
+
+          queryParams[decodeURIComponent(paramSplit[0])] = decodeURIComponent(paramSplit[1]);
+        }
+      });
+
+      onComplete();
+      resolve(queryParams);
+    };
+  });
 }
 
 function executeIntermediateRequest(payload, ajaxOptions) {

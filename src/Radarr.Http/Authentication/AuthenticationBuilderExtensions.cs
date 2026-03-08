@@ -1,9 +1,9 @@
 using System;
 using System.Text.RegularExpressions;
-using Diacritical;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.Extensions.DependencyInjection;
+using NzbDrone.Common.Extensions;
 using NzbDrone.Core.Authentication;
 using NzbDrone.Core.Configuration;
 
@@ -35,7 +35,7 @@ namespace Radarr.Http.Authentication
                 {
                     // Replace diacritics and replace non-word characters to ensure cookie name doesn't contain any valid URL characters not allowed in cookie names
                     var instanceName = configFileProvider.InstanceName;
-                    instanceName = instanceName.RemoveDiacritics();
+                    instanceName = instanceName.RemoveAccent();
                     instanceName = CookieNameRegex.Replace(instanceName, string.Empty);
 
                     options.Cookie.Name = $"{instanceName}Auth";

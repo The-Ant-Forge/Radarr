@@ -64,7 +64,7 @@ function createFetchServerSideCollectionHandler(section, url, fetchDataAugmenter
         section,
         isFetching: false,
         isPopulated: false,
-        error: xhr
+        error: xhr.aborted ? null : xhr
       }));
     });
   };

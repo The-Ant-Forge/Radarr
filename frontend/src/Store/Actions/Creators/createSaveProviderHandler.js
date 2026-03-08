@@ -1,7 +1,7 @@
-import $ from 'jquery';
 import _ from 'lodash';
 import { batchActions } from 'redux-batched-actions';
 import createAjaxRequest from 'Utilities/createAjaxRequest';
+import urlParams from 'Utilities/urlParams';
 import getProviderState from 'Utilities/State/getProviderState';
 import { set, updateItem } from '../baseActions';
 
@@ -41,7 +41,7 @@ function createSaveProviderHandler(section, url, options = {}) {
     lastSaveData = saveData;
 
     const ajaxOptions = {
-      url: `${requestUrl}?${$.param(params, true)}`,
+      url: `${requestUrl}?${urlParams(params)}`,
       method: id ? 'PUT' : 'POST',
       contentType: 'application/json',
       dataType: 'json',

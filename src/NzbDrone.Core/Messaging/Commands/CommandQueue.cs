@@ -16,7 +16,16 @@ namespace NzbDrone.Core.Messaging.Commands
             _items = new List<CommandModel>();
         }
 
-        public int Count => _items.Count;
+        public int Count
+        {
+            get
+            {
+                lock (_mutex)
+                {
+                    return _items.Count;
+                }
+            }
+        }
 
         public void Add(CommandModel item)
         {
@@ -47,14 +56,10 @@ namespace NzbDrone.Core.Messaging.Commands
 
         public List<CommandModel> All()
         {
-            List<CommandModel> rval = null;
-
             lock (_mutex)
             {
-                rval = _items;
+                return new List<CommandModel>(_items);
             }
-
-            return rval;
         }
 
         public CommandModel Find(int id)
