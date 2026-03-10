@@ -124,7 +124,32 @@ export default function createAjaxRequest<T = any>(originalAjaxOptions: AjaxOpti
   }
 
   if (ajaxOptions.data) {
-    fetchOptions.body = typeof ajaxOptions.data === 'string' ? ajaxOptions.data : JSON.stringify(ajaxOptions.data);
+    const method = (fetchOptions.method || 'GET').toUpperCase();
+
+    if (method === 'GET' || method === 'HEAD') {
+      // GET/HEAD: serialize data as query parameters (matching jQuery behavior)
+      if (typeof ajaxOptions.data === 'object') {
+        const params = new URLSearchParams();
+
+        Object.entries(ajaxOptions.data).forEach(([key, value]) => {
+          if (value != null) {
+            if (Array.isArray(value)) {
+              value.forEach((v) => params.append(key, String(v)));
+            } else {
+              params.append(key, String(value));
+            }
+          }
+        });
+
+        const qs = params.toString();
+
+        if (qs) {
+          ajaxOptions.url += (ajaxOptions.url.includes('?') ? '&' : '?') + qs;
+        }
+      }
+    } else {
+      fetchOptions.body = typeof ajaxOptions.data === 'string' ? ajaxOptions.data : JSON.stringify(ajaxOptions.data);
+    }
   }
 
   const fetchPromise = fetch(ajaxOptions.url, fetchOptions)
