@@ -166,13 +166,8 @@ function MediaManagement() {
             validationErrors={validationErrors}
             validationWarnings={validationWarnings}
           >
-            {showAdvancedSettings ? (
-              <FieldSet legend={translate('Folders')}>
-                <FormGroup
-                  advancedSettings={showAdvancedSettings}
-                  isAdvanced={true}
-                  size={sizes.MEDIUM}
-                >
+            <FieldSet legend={translate('Folders')}>
+                <FormGroup size={sizes.MEDIUM}>
                   <FormLabel>{translate('PlaceInRootFolder')}</FormLabel>
 
                   <FormInputGroup
@@ -225,7 +220,6 @@ function MediaManagement() {
                   />
                 </FormGroup>
               </FieldSet>
-            ) : null}
 
             {showAdvancedSettings ? (
               <FieldSet legend={translate('Importing')}>

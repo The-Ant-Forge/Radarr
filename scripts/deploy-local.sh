@@ -139,9 +139,9 @@ start_radarr() {
     echo "Starting Radarr..."
     local win_data
     win_data="$(cygpath -w "$LIVE_DIR")"
-    "$LIVE_BIN/Radarr.Console.exe" --data="$win_data" &
+    "$LIVE_BIN/Radarr.exe" --data="$win_data" &
     disown
-    echo "Radarr started — http://localhost:9871"
+    echo "Radarr tray app started — http://localhost:9871"
 }
 
 # --- Main ---

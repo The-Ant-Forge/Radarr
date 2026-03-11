@@ -81,6 +81,10 @@ and offers to restart. Data files (config.xml, radarr.db, logs) live in
 path via `cygpath -w`) to use the existing config/database. Without it, Radarr
 defaults to `C:\ProgramData\Radarr` and port 7878.
 
+**Always use the tray app** (`Radarr.exe`), not the console app (`Radarr.Console.exe`).
+The tray app puts an icon in the system tray for easy access and closing — no need
+to remember the port. The deploy script launches the tray app by default.
+
 A Windows shortcut is set up to launch the tray app with the correct data path:
 ```
 D:\Apps\Radarr\bin\Radarr.exe --data="D:\Apps\Radarr"
