@@ -50,8 +50,9 @@ yarn build        # production build
 ```
 App runs at http://localhost:7878
 
-## Local Testing Deployment
-A live Radarr instance is installed at `D:\Apps\Radarr` (runs on port 9871).
+## Production Deployment
+Radarr runs natively on this Windows machine at `D:\Apps\Radarr` (port 9871).
+It accesses media on a Synology NAS via SMB (`/volume1/video/Movies/`).
 The build is **self-contained** (bundles .NET runtime + all dependencies), so the
 entire `bin/` folder is replaced on each deploy — no version-mismatch issues.
 
@@ -60,17 +61,21 @@ entire `bin/` folder is replaced on each deploy — no version-mismatch issues.
 | `_output/net8.0/win-x64/*` (self-contained) | `D:\Apps\Radarr\bin\` (replaced entirely) |
 | `_output/UI/` | `D:\Apps\Radarr\bin\UI\` |
 
-Use the deploy script to build and push for testing (builds win-x64 only):
+### Deploy script
 ```bash
+# Upgrade deploy (preserves config.xml, radarr.db, logs, MediaCover, Backups)
 ./scripts/deploy-local.sh            # build + deploy backend + frontend
 ./scripts/deploy-local.sh ui         # build + deploy frontend only
 ./scripts/deploy-local.sh backend    # build + deploy backend only
 ./scripts/deploy-local.sh --no-build all  # deploy only (skip build)
+
+# Clean deploy (wipes EVERYTHING — fresh install with setup wizard)
+./scripts/deploy-local.sh --clean    # requires 'yes' confirmation
 ```
 The script builds self-contained win-x64 for backend and webpack for frontend,
 stops Radarr if running, replaces `bin/` with fresh build output, deploys UI,
 and offers to restart. Data files (config.xml, radarr.db, logs) live in
-`D:\Apps\Radarr\` (outside `bin/`) and are preserved across deploys.
+`D:\Apps\Radarr\` (outside `bin/`) and are preserved across upgrade deploys.
 
 **Important**: The exe must be launched with `--data="D:\Apps\Radarr"` (Windows-style
 path via `cygpath -w`) to use the existing config/database. Without it, Radarr

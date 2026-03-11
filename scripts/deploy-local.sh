@@ -1,11 +1,15 @@
 #!/bin/bash
-# deploy-local.sh — Build (self-contained) and deploy to local Radarr install for testing
+# deploy-local.sh — Build (self-contained) and deploy to local Radarr install
 #
 # Usage:
-#   ./scripts/deploy-local.sh           # build + deploy backend + frontend
-#   ./scripts/deploy-local.sh ui        # build + deploy frontend only
-#   ./scripts/deploy-local.sh backend   # build + deploy backend only
+#   ./scripts/deploy-local.sh            # build + deploy backend + frontend (upgrade)
+#   ./scripts/deploy-local.sh ui         # build + deploy frontend only
+#   ./scripts/deploy-local.sh backend    # build + deploy backend only
 #   ./scripts/deploy-local.sh --no-build [ui|backend|all]  # deploy without building
+#   ./scripts/deploy-local.sh --clean    # full clean deploy (wipes DB, config, everything)
+#
+# Default (upgrade) preserves: config.xml, radarr.db, logs.db, logs/, MediaCover/, Backups/
+# --clean wipes the entire install directory and starts fresh.
 
 set -euo pipefail
 
@@ -16,17 +20,21 @@ LIVE_DIR="/d/Apps/Radarr"
 LIVE_BIN="$LIVE_DIR/bin"
 LIVE_UI="$LIVE_BIN/UI"
 SKIP_BUILD=false
+CLEAN_DEPLOY=false
 
-# Parse --no-build flag
-if [ "${1:-}" = "--no-build" ]; then
-    SKIP_BUILD=true
-    shift
-fi
+# Parse flags
+while [[ "${1:-}" == --* ]]; do
+    case "$1" in
+        --no-build) SKIP_BUILD=true; shift ;;
+        --clean)    CLEAN_DEPLOY=true; shift ;;
+        *)          echo "Unknown flag: $1"; exit 1 ;;
+    esac
+done
 
 DEPLOY_MODE="${1:-all}"
 
 # --- Validation ---
-if [ ! -d "$LIVE_DIR" ]; then
+if [ ! -d "$LIVE_DIR" ] && [ "$CLEAN_DEPLOY" = false ]; then
     echo "ERROR: Live Radarr not found at $LIVE_DIR"
     exit 1
 fi
@@ -85,19 +93,45 @@ deploy_ui() {
     echo "Frontend deployed."
 }
 
-# --- Deploy backend ---
+# --- Deploy backend (upgrade — preserves data) ---
 deploy_backend() {
     if [ ! -d "$BACKEND_BUILD" ]; then
         echo "ERROR: No backend build found at $BACKEND_BUILD"
         return 1
     fi
     echo "Deploying backend (replacing bin/ entirely)..."
-    # Preserve data files that live outside bin/
-    # Wipe old bin/ and replace with self-contained build
     rm -rf "$LIVE_BIN"
     mkdir -p "$LIVE_BIN"
     cp -r "$BACKEND_BUILD"/* "$LIVE_BIN/"
     echo "Backend deployed."
+}
+
+# --- Deploy clean (wipes everything) ---
+deploy_clean() {
+    if [ ! -d "$BACKEND_BUILD" ]; then
+        echo "ERROR: No backend build found at $BACKEND_BUILD"
+        return 1
+    fi
+    echo ""
+    echo "WARNING: This will DELETE everything in $LIVE_DIR"
+    echo "  including: config.xml, radarr.db, logs, MediaCover, Backups"
+    echo ""
+    read -rp "Are you sure? Type 'yes' to confirm: " confirm
+    if [ "$confirm" != "yes" ]; then
+        echo "Aborted."
+        exit 0
+    fi
+    echo "Wiping $LIVE_DIR..."
+    rm -rf "$LIVE_DIR"
+    mkdir -p "$LIVE_BIN"
+    cp -r "$BACKEND_BUILD"/* "$LIVE_BIN/"
+    echo "Clean backend deployed."
+    if [ -d "$BUILD_OUTPUT/UI" ]; then
+        cp -r "$BUILD_OUTPUT/UI" "$LIVE_UI"
+        echo "Frontend deployed."
+    fi
+    echo ""
+    echo "Fresh install — Radarr will start with setup wizard on first launch."
 }
 
 # --- Start Radarr ---
@@ -112,7 +146,11 @@ start_radarr() {
 
 # --- Main ---
 echo "=== Radarr Local Deploy ==="
-echo "Mode: $DEPLOY_MODE"
+if [ "$CLEAN_DEPLOY" = true ]; then
+    echo "Mode: CLEAN (full wipe)"
+else
+    echo "Mode: $DEPLOY_MODE (upgrade — data preserved)"
+fi
 echo ""
 
 # --- Build phase ---
@@ -127,23 +165,27 @@ fi
 
 stop_radarr
 
-case "$DEPLOY_MODE" in
-    ui|frontend)
-        deploy_ui
-        ;;
-    backend)
-        deploy_backend
-        ;;
-    all|"")
-        deploy_backend
-        deploy_ui
-        ;;
-    *)
-        echo "Unknown mode: $DEPLOY_MODE"
-        echo "Usage: $0 [--no-build] [ui|backend|all]"
-        exit 1
-        ;;
-esac
+if [ "$CLEAN_DEPLOY" = true ]; then
+    deploy_clean
+else
+    case "$DEPLOY_MODE" in
+        ui|frontend)
+            deploy_ui
+            ;;
+        backend)
+            deploy_backend
+            ;;
+        all|"")
+            deploy_backend
+            deploy_ui
+            ;;
+        *)
+            echo "Unknown mode: $DEPLOY_MODE"
+            echo "Usage: $0 [--no-build] [--clean] [ui|backend|all]"
+            exit 1
+            ;;
+    esac
+fi
 
 echo ""
 read -rp "Start Radarr now? [Y/n] " answer
