@@ -74,12 +74,12 @@ namespace NzbDrone.Core.Http
                 return IPAddress.TryParse(cidr, out var exact) && exact.Equals(address);
             }
 
-            if (!IPAddress.TryParse(cidr.Substring(0, slashIndex), out var network))
+            if (!IPAddress.TryParse(cidr.AsSpan(0, slashIndex), out var network))
             {
                 return false;
             }
 
-            if (!int.TryParse(cidr.Substring(slashIndex + 1), out var prefixLength))
+            if (!int.TryParse(cidr.AsSpan(slashIndex + 1), out var prefixLength))
             {
                 return false;
             }
@@ -91,6 +91,7 @@ namespace NzbDrone.Core.Http
             {
                 return false;
             }
+
             var addressBytes = address.GetAddressBytes();
 
             if (networkBytes.Length != addressBytes.Length)
