@@ -36,22 +36,4 @@ namespace NzbDrone.Core.Notifications.Plex.Server
         [JsonProperty("Directory")]
         public List<PlexSection> Sections { get; set; }
     }
-
-    public class PlexSectionLegacy
-    {
-        [JsonProperty("key")]
-        public int Id { get; set; }
-
-        public string Type { get; set; }
-        public string Language { get; set; }
-
-        [JsonProperty("_children")]
-        public List<PlexSectionLocation> Locations { get; set; }
-    }
-
-    public class PlexMediaContainerLegacy
-    {
-        [JsonProperty("_children")]
-        public List<PlexSectionLegacy> Sections { get; set; }
-    }
 }

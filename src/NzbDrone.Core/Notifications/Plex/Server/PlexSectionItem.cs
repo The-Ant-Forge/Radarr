@@ -23,15 +23,4 @@ namespace NzbDrone.Core.Notifications.Plex.Server
             Items = new List<PlexSectionItem>();
         }
     }
-
-    public class PlexSectionResponseLegacy
-    {
-        [JsonProperty("_children")]
-        public List<PlexSectionItem> Items { get; set; }
-
-        public PlexSectionResponseLegacy()
-        {
-            Items = new List<PlexSectionItem>();
-        }
-    }
 }

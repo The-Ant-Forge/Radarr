@@ -15,10 +15,4 @@ namespace NzbDrone.Core.Notifications.Plex.Server
         public string Type { get; set; }
         public string Value { get; set; }
     }
-
-    public class PlexPreferencesLegacy
-    {
-        [JsonProperty("_children")]
-        public List<PlexPreference> Preferences { get; set; }
-    }
 }

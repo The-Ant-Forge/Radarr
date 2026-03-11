@@ -38,21 +38,6 @@ namespace NzbDrone.Core.Notifications.Plex.Server
 
             CheckForError(response);
 
-            if (response.Contains("_children"))
-            {
-                return Json.Deserialize<PlexMediaContainerLegacy>(response)
-                    .Sections
-                    .Where(d => d.Type == "movie")
-                    .Select(s => new PlexSection
-                    {
-                        Id = s.Id,
-                        Language = s.Language,
-                        Locations = s.Locations,
-                        Type = s.Type
-                    })
-                    .ToList();
-            }
-
             return Json.Deserialize<PlexResponse<PlexSectionsContainer>>(response)
                        .MediaContainer
                        .Sections
@@ -78,12 +63,6 @@ namespace NzbDrone.Core.Notifications.Plex.Server
             var response = ProcessRequest(request);
 
             CheckForError(response);
-
-            if (response.Contains("_children"))
-            {
-                return Json.Deserialize<PlexIdentity>(response)
-                           .Version;
-            }
 
             return Json.Deserialize<PlexResponse<PlexIdentity>>(response)
                        .MediaContainer
@@ -158,9 +137,7 @@ namespace NzbDrone.Core.Notifications.Plex.Server
                 return;
             }
 
-            var error = response.Contains("_children") ?
-                        Json.Deserialize<PlexError>(response) :
-                        Json.Deserialize<PlexResponse<PlexError>>(response).MediaContainer;
+            var error = Json.Deserialize<PlexResponse<PlexError>>(response).MediaContainer;
 
             if (error != null && !error.Error.IsNullOrWhiteSpace())
             {
