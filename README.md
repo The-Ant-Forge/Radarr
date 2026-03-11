@@ -2,7 +2,7 @@
 
 A fork of [Radarr](https://github.com/Radarr/Radarr) — movie collection manager for Usenet and BitTorrent users.
 
-This fork adds new features, code quality improvements, and bug fixes on top of the upstream Radarr project. Changes are developed with the goal of eventual contribution back to the upstream project via pull requests.
+This fork adds new features, code quality improvements, and bug fixes on top of the upstream Radarr project. Changes are developed with the goal of eventual contribution back to the upstream project via pull requests but divergence may happen due to migrating many of the dependencies and removal and inlining of lightly used dependencies.
 
 ## Fork Changes
 
