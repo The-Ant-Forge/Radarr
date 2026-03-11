@@ -10,6 +10,7 @@ permissions:
 
 jobs:
   action:
+    if: false
     runs-on: ubuntu-latest
     steps:
       - uses: dessant/label-actions@v3
