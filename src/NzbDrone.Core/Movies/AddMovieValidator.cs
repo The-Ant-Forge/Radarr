@@ -1,5 +1,6 @@
 using FluentValidation;
 using FluentValidation.Results;
+using NzbDrone.Core.Configuration;
 using NzbDrone.Core.Validation.Paths;
 
 namespace NzbDrone.Core.Movies
@@ -14,14 +15,18 @@ namespace NzbDrone.Core.Movies
         public AddMovieValidator(RootFolderValidator rootFolderValidator,
                                  RecycleBinValidator recycleBinValidator,
                                  MoviePathValidator moviePathValidator,
-                                 MovieAncestorValidator movieAncestorValidator)
+                                 MovieAncestorValidator movieAncestorValidator,
+                                 IConfigService configService)
         {
             RuleFor(c => c.Path).Cascade(CascadeMode.Stop)
                                 .IsValidPath()
                                 .SetValidator(rootFolderValidator)
+                                .When(_ => !configService.PlaceInRootFolder)
                                 .SetValidator(recycleBinValidator)
                                 .SetValidator(moviePathValidator)
-                                .SetValidator(movieAncestorValidator);
+                                .When(_ => !configService.PlaceInRootFolder)
+                                .SetValidator(movieAncestorValidator)
+                                .When(_ => !configService.PlaceInRootFolder);
         }
     }
 }

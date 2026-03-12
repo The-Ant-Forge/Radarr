@@ -83,9 +83,12 @@ namespace Radarr.Api.V3.Movies
             SharedValidator.RuleFor(s => s.Path).Cascade(CascadeMode.Stop)
                 .IsValidPath()
                 .SetValidator(rootFolderValidator)
+                .When(_ => !_configService.PlaceInRootFolder)
                 .SetValidator(mappedNetworkDriveValidator)
                 .SetValidator(moviesPathValidator)
+                .When(_ => !_configService.PlaceInRootFolder)
                 .SetValidator(moviesAncestorValidator)
+                .When(_ => !_configService.PlaceInRootFolder)
                 .SetValidator(recycleBinValidator)
                 .SetValidator(systemFolderValidator)
                 .When(s => s.Path.IsNotNullOrWhiteSpace());
