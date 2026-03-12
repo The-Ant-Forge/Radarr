@@ -17,6 +17,7 @@ namespace Radarr.Api.V3.Config
         public bool PlaceInRootFolder { get; set; }
         public FileDateType FileDate { get; set; }
         public RescanAfterRefreshType RescanAfterRefresh { get; set; }
+        public bool RefreshMonitoredOnly { get; set; }
         public bool AutoRenameFolders { get; set; }
 
         public bool SetPermissionsLinux { get; set; }
@@ -49,6 +50,7 @@ namespace Radarr.Api.V3.Config
                 PlaceInRootFolder = model.PlaceInRootFolder,
                 FileDate = model.FileDate,
                 RescanAfterRefresh = model.RescanAfterRefresh,
+                RefreshMonitoredOnly = model.RefreshMonitoredOnly,
                 AutoRenameFolders = model.AutoRenameFolders,
 
                 SetPermissionsLinux = model.SetPermissionsLinux,

@@ -206,6 +206,17 @@ namespace NzbDrone.Core.Movies
             }
         }
 
+        private void RescanMovieIfPathNotScanned(Movie movie, bool isNew, CommandTrigger trigger, HashSet<string> scannedPaths)
+        {
+            if (!scannedPaths.Add(movie.Path))
+            {
+                _logger.Debug("Skipping scan of {0}. Reason: Path already scanned this cycle", movie);
+                return;
+            }
+
+            RescanMovie(movie, isNew, trigger);
+        }
+
         private void UpdateTags(Movie movie, bool isNew)
         {
             if (isNew)
@@ -258,6 +269,14 @@ namespace NzbDrone.Core.Movies
                 // TODO refresh all moviemetadata here, even if not used by a Movie
                 var allMovies = _movieService.GetAllMovies();
 
+                if (_configService.RefreshMonitoredOnly)
+                {
+                    var totalCount = allMovies.Count;
+                    allMovies = allMovies.Where(m => m.Monitored).ToList();
+                    _logger.Debug("RefreshMonitoredOnly is enabled, processing {0} of {1} movies", allMovies.Count, totalCount);
+                }
+
+                var scannedPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
                 var updatedTmdbMovies = new HashSet<int>();
 
                 if (message.LastStartTime.HasValue && message.LastStartTime.Value.AddDays(14) > DateTime.UtcNow)
@@ -285,13 +304,13 @@ namespace NzbDrone.Core.Movies
                         }
 
                         UpdateTags(movie, false);
-                        RescanMovie(movieLocal, false, trigger);
+                        RescanMovieIfPathNotScanned(movieLocal, false, trigger, scannedPaths);
                     }
                     else
                     {
                         _logger.Debug("Skipping refresh of movie: {0}", movieLocal.Title);
                         UpdateTags(movie, false);
-                        RescanMovie(movieLocal, false, trigger);
+                        RescanMovieIfPathNotScanned(movieLocal, false, trigger, scannedPaths);
                     }
                 }
             }

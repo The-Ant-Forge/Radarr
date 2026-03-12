@@ -1561,6 +1561,8 @@
   "RefreshInformationAndScanDisk": "Refresh information and scan disk",
   "RefreshLists": "Refresh Lists",
   "RefreshMonitoredIntervalHelpText": "How often to refresh monitored downloads from download clients, minimum 1 minute",
+  "RefreshMonitoredOnly": "Refresh Monitored Movies Only",
+  "RefreshMonitoredOnlyHelpText": "Only refresh metadata and scan disk for monitored movies. Unmonitored movies will be skipped during updates.",
   "RefreshMovie": "Refresh movie",
   "RegularExpressionsCanBeTested": "Regular expressions can be tested [here]({url}).",
   "RegularExpressionsTutorialLink": "More details on regular expressions can be found [here]({url}).",

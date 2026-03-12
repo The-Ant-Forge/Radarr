@@ -432,6 +432,20 @@ function MediaManagement() {
                 />
               </FormGroup>
 
+              <FormGroup size={sizes.MEDIUM}>
+                <FormLabel>
+                  {translate('RefreshMonitoredOnly')}
+                </FormLabel>
+
+                <FormInputGroup
+                  type={inputTypes.CHECK}
+                  name="refreshMonitoredOnly"
+                  helpText={translate('RefreshMonitoredOnlyHelpText')}
+                  onChange={handleInputChange}
+                  {...settings.refreshMonitoredOnly}
+                />
+              </FormGroup>
+
               <FormGroup
                 advancedSettings={showAdvancedSettings}
                 isAdvanced={true}

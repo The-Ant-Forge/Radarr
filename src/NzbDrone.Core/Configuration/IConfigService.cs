@@ -43,6 +43,7 @@ namespace NzbDrone.Core.Configuration
         bool ImportExtraFiles { get; set; }
         string ExtraFileExtensions { get; set; }
         RescanAfterRefreshType RescanAfterRefresh { get; set; }
+        bool RefreshMonitoredOnly { get; set; }
         bool AutoRenameFolders { get; set; }
 
         // Permissions (Media Management)

@@ -321,6 +321,13 @@ namespace NzbDrone.Core.Configuration
             set { SetValue("RescanAfterRefresh", value); }
         }
 
+        public bool RefreshMonitoredOnly
+        {
+            get { return GetValueBoolean("RefreshMonitoredOnly", false); }
+
+            set { SetValue("RefreshMonitoredOnly", value); }
+        }
+
         public bool SetPermissionsLinux
         {
             get { return GetValueBoolean("SetPermissionsLinux", false); }

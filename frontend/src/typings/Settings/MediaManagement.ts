@@ -9,6 +9,7 @@ export default interface MediaManagement {
   placeInRootFolder: boolean;
   fileDate: string;
   rescanAfterRefresh: string;
+  refreshMonitoredOnly: boolean;
   setPermissionsLinux: boolean;
   chmodFolder: string;
   chownGroup: string;

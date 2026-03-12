@@ -131,6 +131,34 @@ namespace NzbDrone.Core.MediaFiles
             videoFilesStopwatch.Stop();
             _logger.Trace("Finished getting movie files for: {0} [{1}]", movie, videoFilesStopwatch.Elapsed);
 
+            // When PlaceInRootFolder is enabled, all movies share one folder.
+            // Pre-filter the file list to only files whose name contains the movie title
+            // to avoid reading media info from hundreds of unrelated files.
+            if (_configService.PlaceInRootFolder && movie.Title.IsNotNullOrWhiteSpace())
+            {
+                var beforeCount = mediaFileList.Count;
+                var titleWithYear = $"{movie.Title} ({movie.Year})";
+                mediaFileList = mediaFileList.Where(f =>
+                {
+                    var fileName = Path.GetFileNameWithoutExtension(f);
+                    return fileName != null && fileName.StartsWith(titleWithYear, StringComparison.OrdinalIgnoreCase);
+                }).ToList();
+
+                // Fall back to title-only match if year-match found nothing
+                if (mediaFileList.Count == 0)
+                {
+                    var movieTitle = movie.Title;
+                    mediaFileList = FilterPaths(movie.Path, GetVideoFiles(movie.Path))
+                        .Where(f =>
+                        {
+                            var fileName = Path.GetFileNameWithoutExtension(f);
+                            return fileName != null && fileName.StartsWith(movieTitle, StringComparison.OrdinalIgnoreCase);
+                        }).ToList();
+                }
+
+                _logger.Debug("PlaceInRootFolder: filtered {0} files to {1} for {2}", beforeCount, mediaFileList.Count, titleWithYear);
+            }
+
             CleanMediaFiles(movie, mediaFileList);
 
             var movieFiles = _mediaFileService.GetFilesByMovie(movie.Id);
@@ -280,9 +308,25 @@ namespace NzbDrone.Core.MediaFiles
             {
                 var allMovies = _movieService.GetAllMovies();
 
+                if (_configService.RefreshMonitoredOnly)
+                {
+                    var totalCount = allMovies.Count;
+                    allMovies = allMovies.Where(m => m.Monitored).ToList();
+                    _logger.Debug("RefreshMonitoredOnly is enabled, scanning {0} of {1} movies", allMovies.Count, totalCount);
+                }
+
+                var scannedPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
                 foreach (var movie in allMovies)
                 {
-                    Scan(movie);
+                    if (scannedPaths.Add(movie.Path))
+                    {
+                        Scan(movie);
+                    }
+                    else
+                    {
+                        _logger.Debug("Skipping scan of {0}. Reason: Path already scanned this cycle", movie.Title);
+                    }
                 }
             }
         }
