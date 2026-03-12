@@ -10,6 +10,8 @@ This fork adds new features, code quality improvements, and bug fixes on top of 
 
 **Place in Root Folder** — A new setting in Media Management that tells Radarr to place movie files directly in the root folder instead of creating a per-movie subfolder. Useful for flat library layouts or users who rely on external tools for organisation. See [Spec-No-Folders.md](docs/Spec-No-Folders.md).
 
+**Refresh Monitored Movies Only** — A new setting in Media Management that skips unmonitored movies during refresh and disk scan cycles. Combined with scan path deduplication and title-based file filtering, this dramatically improves performance for PlaceInRootFolder users with large libraries. See [Spec-Refresh-Monitored-Only.md](docs/Spec-Refresh-Monitored-Only.md).
+
 **Unmonitor on Cutoff Met** — A new setting in Media Management > File Management that automatically unmonitors movies after import once the file quality meets or exceeds the quality profile's cutoff. Saves indexer API calls and bandwidth by stopping searches for upgrades that aren't needed. See [Spec-UnMonitor.md](docs/Spec-UnMonitor.md).
 
 ### Bug Fixes
