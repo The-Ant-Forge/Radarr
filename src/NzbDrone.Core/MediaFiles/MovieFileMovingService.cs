@@ -112,7 +112,7 @@ namespace NzbDrone.Core.MediaFiles
                 throw new FileNotFoundException("Movie file path does not exist", movieFilePath);
             }
 
-            if (movieFilePath == destinationFilePath)
+            if (movieFilePath.PathEquals(destinationFilePath))
             {
                 throw new SameFilenameException("File not moved, source and destination are the same", movieFilePath);
             }

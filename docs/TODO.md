@@ -7,7 +7,7 @@ Tracking deferred items, known debt, and planned work.
 ### High Effort / High Risk (requires careful planning)
 
 - [x] **F1/F2**: Guard root folder deletion in MediaFileDeletionService and DownloadedMovieImportService _(done: b257a81)_
-- [ ] **F4**: Handle RelativePath identity case in MovieFileMovingService when paths are equal
+- [x] **F4**: Handle RelativePath identity case in MovieFileMovingService when paths are equal _(done: use PathEquals for OS-aware comparison)_
 - [x] **F7**: Fix bulk delete early exit / partial deletion in MediaFileDeletionService.HandleAsync _(done: b257a81)_
 - [x] **F9**: Add cross-movie scope validation in bulk file editor _(done: b257a81)_
 - [x] **F13**: ~~PlaceInRootFolder config toggle migration~~ — downgraded: toggle only affects new movies, existing paths stay valid. Mixed layout is cosmetic, not a data integrity issue. All scan/delete guards handle both layouts.
