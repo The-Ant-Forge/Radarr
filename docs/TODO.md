@@ -10,7 +10,7 @@ Tracking deferred items, known debt, and planned work.
 - [ ] **F4**: Handle RelativePath identity case in MovieFileMovingService when paths are equal
 - [x] **F7**: Fix bulk delete early exit / partial deletion in MediaFileDeletionService.HandleAsync _(done: b257a81)_
 - [x] **F9**: Add cross-movie scope validation in bulk file editor _(done: b257a81)_
-- [ ] **F13**: PlaceInRootFolder config toggle migration strategy (update movie paths when toggled)
+- [x] **F13**: ~~PlaceInRootFolder config toggle migration~~ — downgraded: toggle only affects new movies, existing paths stay valid. Mixed layout is cosmetic, not a data integrity issue. All scan/delete guards handle both layouts.
 - [ ] **F14**: Path consistency validation in MediaFileTableCleanupService
 - [ ] **F15**: Path-level scan locking to prevent concurrent scans of same folder
 - [ ] **F18**: Config snapshot reads to prevent mid-operation config changes
