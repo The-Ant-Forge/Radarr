@@ -40,6 +40,7 @@ namespace NzbDrone.Core.Movies
         void DeleteMovie(int movieId, bool deleteFiles, bool addImportListExclusion = false);
         void DeleteMovies(List<int> movieIds, bool deleteFiles, bool addImportListExclusion = false);
         List<Movie> GetAllMovies();
+        List<Movie> GetMonitoredMovies();
         Dictionary<int, List<int>> AllMovieTags();
         Movie UpdateMovie(Movie movie);
         List<Movie> UpdateMovie(List<Movie> movies, bool useExistingRelativeFolder);
@@ -240,6 +241,11 @@ namespace NzbDrone.Core.Movies
         public List<Movie> GetAllMovies()
         {
             return _movieRepository.All().ToList();
+        }
+
+        public List<Movie> GetMonitoredMovies()
+        {
+            return _movieRepository.GetMonitoredMovies();
         }
 
         public Dictionary<int, List<int>> AllMovieTags()

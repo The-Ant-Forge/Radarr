@@ -267,13 +267,16 @@ namespace NzbDrone.Core.Movies
             else
             {
                 // TODO refresh all moviemetadata here, even if not used by a Movie
-                var allMovies = _movieService.GetAllMovies();
+                List<Movie> allMovies;
 
                 if (_configService.RefreshMonitoredOnly)
                 {
-                    var totalCount = allMovies.Count;
-                    allMovies = allMovies.Where(m => m.Monitored).ToList();
-                    _logger.Debug("RefreshMonitoredOnly is enabled, processing {0} of {1} movies", allMovies.Count, totalCount);
+                    allMovies = _movieService.GetMonitoredMovies();
+                    _logger.Debug("RefreshMonitoredOnly is enabled, processing {0} monitored movies", allMovies.Count);
+                }
+                else
+                {
+                    allMovies = _movieService.GetAllMovies();
                 }
 
                 var scannedPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);

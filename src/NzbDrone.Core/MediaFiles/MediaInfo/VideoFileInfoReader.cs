@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -20,6 +21,7 @@ namespace NzbDrone.Core.MediaFiles.MediaInfo
         private readonly IDiskProvider _diskProvider;
         private readonly Logger _logger;
         private readonly List<FFProbePixelFormat> _pixelFormats;
+        private readonly ConcurrentDictionary<string, (MediaInfoModel Model, long Size, DateTime LastWrite)> _cache = new ConcurrentDictionary<string, (MediaInfoModel Model, long Size, DateTime LastWrite)>();
 
         public const int MINIMUM_MEDIA_INFO_SCHEMA_REVISION = 14;
         public const int CURRENT_MEDIA_INFO_SCHEMA_REVISION = 14;
@@ -60,7 +62,15 @@ namespace NzbDrone.Core.MediaFiles.MediaInfo
                 return null;
             }
 
-            // TODO: Cache media info by path, mtime and length so we don't need to read files multiple times
+            var fileSize = _diskProvider.GetFileSize(filename);
+            var lastWrite = _diskProvider.FileGetLastWrite(filename);
+
+            if (_cache.TryGetValue(filename, out var cached) && cached.Size == fileSize && cached.LastWrite == lastWrite)
+            {
+                _logger.Trace("Using cached media info for {0}", filename);
+                return cached.Model;
+            }
+
             try
             {
                 _logger.Debug("Getting media info from {0}", filename);
@@ -128,6 +138,8 @@ namespace NzbDrone.Core.MediaFiles.MediaInfo
 
                 var sideData = streamSideData.Concat(framesSideData).ToList();
                 mediaInfoModel.VideoHdrFormat = GetHdrFormat(mediaInfoModel.VideoBitDepth, mediaInfoModel.VideoColourPrimaries, mediaInfoModel.VideoTransferCharacteristics, sideData);
+
+                _cache[filename] = (mediaInfoModel, fileSize, lastWrite);
 
                 return mediaInfoModel;
             }

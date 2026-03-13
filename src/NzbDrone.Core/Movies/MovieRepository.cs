@@ -15,6 +15,7 @@ namespace NzbDrone.Core.Movies
     public interface IMovieRepository : IBasicRepository<Movie>
     {
         bool MoviePathExists(string path);
+        List<Movie> GetMonitoredMovies();
         List<Movie> FindByTitles(List<string> titles);
         Movie FindByImdbId(string imdbid);
         Movie FindByTmdbId(int tmdbid);
@@ -124,6 +125,11 @@ namespace NzbDrone.Core.Movies
 
                     return movie;
                 });
+        }
+
+        public List<Movie> GetMonitoredMovies()
+        {
+            return Query(x => x.Monitored == true);
         }
 
         public bool MoviePathExists(string path)
