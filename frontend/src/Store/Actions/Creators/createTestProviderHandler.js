@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import createAjaxRequest from 'Utilities/createAjaxRequest';
-import urlParams from 'Utilities/urlParams';
 import getProviderState from 'Utilities/State/getProviderState';
+import urlParams from 'Utilities/urlParams';
 import { set } from '../baseActions';
 
 const abortCurrentRequests = {};

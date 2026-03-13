@@ -1,8 +1,8 @@
 import _ from 'lodash';
 import { batchActions } from 'redux-batched-actions';
 import createAjaxRequest from 'Utilities/createAjaxRequest';
-import urlParams from 'Utilities/urlParams';
 import getProviderState from 'Utilities/State/getProviderState';
+import urlParams from 'Utilities/urlParams';
 import { set, updateItem } from '../baseActions';
 
 const abortCurrentRequests = {};

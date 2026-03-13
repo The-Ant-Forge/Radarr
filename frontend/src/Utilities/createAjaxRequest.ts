@@ -51,7 +51,10 @@ function addContentType(ajaxOptions: AjaxOptions): void {
   if (
     ajaxOptions.contentType == null &&
     ajaxOptions.dataType === 'json' &&
-    (ajaxOptions.method === 'PUT' || ajaxOptions.method === 'POST' || ajaxOptions.method === 'DELETE')) {
+    (ajaxOptions.method === 'PUT' ||
+      ajaxOptions.method === 'POST' ||
+      ajaxOptions.method === 'DELETE')
+  ) {
     ajaxOptions.contentType = 'application/json';
   }
 }
@@ -93,7 +96,9 @@ function augmentPromise<T>(promise: Promise<T>): AugmentedPromise<T> {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export default function createAjaxRequest<T = any>(originalAjaxOptions: AjaxOptions): AjaxRequestResult<T> {
+export default function createAjaxRequest<T = any>(
+  originalAjaxOptions: AjaxOptions
+): AjaxRequestResult<T> {
   const controller = new AbortController();
   let aborted = false;
   let complete = false;
@@ -116,11 +121,12 @@ export default function createAjaxRequest<T = any>(originalAjaxOptions: AjaxOpti
   const fetchOptions: RequestInit = {
     method: ajaxOptions.method || 'GET',
     headers: { ...ajaxOptions.headers },
-    signal: controller.signal
+    signal: controller.signal,
   };
 
   if (ajaxOptions.contentType) {
-    (fetchOptions.headers as Record<string, string>)['Content-Type'] = ajaxOptions.contentType;
+    (fetchOptions.headers as Record<string, string>)['Content-Type'] =
+      ajaxOptions.contentType;
   }
 
   if (ajaxOptions.data) {
@@ -148,7 +154,10 @@ export default function createAjaxRequest<T = any>(originalAjaxOptions: AjaxOpti
         }
       }
     } else {
-      fetchOptions.body = typeof ajaxOptions.data === 'string' ? ajaxOptions.data : JSON.stringify(ajaxOptions.data);
+      fetchOptions.body =
+        typeof ajaxOptions.data === 'string'
+          ? ajaxOptions.data
+          : JSON.stringify(ajaxOptions.data);
     }
   }
 
@@ -161,7 +170,7 @@ export default function createAjaxRequest<T = any>(originalAjaxOptions: AjaxOpti
         const errorXhr: XhrErrorObject = {
           status: response.status,
           aborted,
-          responseJSON: null
+          responseJSON: null,
         };
 
         try {
@@ -189,7 +198,11 @@ export default function createAjaxRequest<T = any>(originalAjaxOptions: AjaxOpti
       complete = true;
 
       if (error && error.name === 'AbortError') {
-        const abortXhr: XhrErrorObject = { status: 0, aborted: true, responseJSON: null };
+        const abortXhr: XhrErrorObject = {
+          status: 0,
+          aborted: true,
+          responseJSON: null,
+        };
         throw abortXhr;
       }
 
@@ -199,7 +212,11 @@ export default function createAjaxRequest<T = any>(originalAjaxOptions: AjaxOpti
       }
 
       // Network error or other unexpected failure
-      const networkXhr: XhrErrorObject = { status: 0, aborted, responseJSON: null };
+      const networkXhr: XhrErrorObject = {
+        status: 0,
+        aborted,
+        responseJSON: null,
+      };
       throw networkXhr;
     });
 
@@ -207,6 +224,6 @@ export default function createAjaxRequest<T = any>(originalAjaxOptions: AjaxOpti
 
   return {
     request,
-    abortRequest
+    abortRequest,
   };
 }

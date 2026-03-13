@@ -167,59 +167,59 @@ function MediaManagement() {
             validationWarnings={validationWarnings}
           >
             <FieldSet legend={translate('Folders')}>
-                <FormGroup size={sizes.MEDIUM}>
-                  <FormLabel>{translate('PlaceInRootFolder')}</FormLabel>
+              <FormGroup size={sizes.MEDIUM}>
+                <FormLabel>{translate('PlaceInRootFolder')}</FormLabel>
 
-                  <FormInputGroup
-                    type={inputTypes.CHECK}
-                    name="placeInRootFolder"
-                    helpText={translate('PlaceInRootFolderHelpText')}
-                    onChange={handleInputChange}
-                    {...settings.placeInRootFolder}
-                  />
-                </FormGroup>
+                <FormInputGroup
+                  type={inputTypes.CHECK}
+                  name="placeInRootFolder"
+                  helpText={translate('PlaceInRootFolderHelpText')}
+                  onChange={handleInputChange}
+                  {...settings.placeInRootFolder}
+                />
+              </FormGroup>
 
-                <FormGroup
-                  advancedSettings={showAdvancedSettings}
-                  isAdvanced={true}
-                  size={sizes.MEDIUM}
-                >
-                  <FormLabel>{translate('CreateEmptyMovieFolders')}</FormLabel>
+              <FormGroup
+                advancedSettings={showAdvancedSettings}
+                isAdvanced={true}
+                size={sizes.MEDIUM}
+              >
+                <FormLabel>{translate('CreateEmptyMovieFolders')}</FormLabel>
 
-                  <FormInputGroup
-                    type={inputTypes.CHECK}
-                    isDisabled={
-                      settings.placeInRootFolder.value ||
-                      (settings.deleteEmptyFolders.value &&
+                <FormInputGroup
+                  type={inputTypes.CHECK}
+                  isDisabled={
+                    settings.placeInRootFolder.value ||
+                    (settings.deleteEmptyFolders.value &&
                       !settings.createEmptyMovieFolders.value)
-                    }
-                    name="createEmptyMovieFolders"
-                    helpText={translate('CreateEmptyMovieFoldersHelpText')}
-                    onChange={handleInputChange}
-                    {...settings.createEmptyMovieFolders}
-                  />
-                </FormGroup>
+                  }
+                  name="createEmptyMovieFolders"
+                  helpText={translate('CreateEmptyMovieFoldersHelpText')}
+                  onChange={handleInputChange}
+                  {...settings.createEmptyMovieFolders}
+                />
+              </FormGroup>
 
-                <FormGroup
-                  advancedSettings={showAdvancedSettings}
-                  isAdvanced={true}
-                  size={sizes.MEDIUM}
-                >
-                  <FormLabel>{translate('DeleteEmptyFolders')}</FormLabel>
+              <FormGroup
+                advancedSettings={showAdvancedSettings}
+                isAdvanced={true}
+                size={sizes.MEDIUM}
+              >
+                <FormLabel>{translate('DeleteEmptyFolders')}</FormLabel>
 
-                  <FormInputGroup
-                    type={inputTypes.CHECK}
-                    isDisabled={
-                      settings.createEmptyMovieFolders.value &&
-                      !settings.deleteEmptyFolders.value
-                    }
-                    name="deleteEmptyFolders"
-                    helpText={translate('DeleteEmptyMovieFoldersHelpText')}
-                    onChange={handleInputChange}
-                    {...settings.deleteEmptyFolders}
-                  />
-                </FormGroup>
-              </FieldSet>
+                <FormInputGroup
+                  type={inputTypes.CHECK}
+                  isDisabled={
+                    settings.createEmptyMovieFolders.value &&
+                    !settings.deleteEmptyFolders.value
+                  }
+                  name="deleteEmptyFolders"
+                  helpText={translate('DeleteEmptyMovieFoldersHelpText')}
+                  onChange={handleInputChange}
+                  {...settings.deleteEmptyFolders}
+                />
+              </FormGroup>
+            </FieldSet>
 
             {showAdvancedSettings ? (
               <FieldSet legend={translate('Importing')}>
@@ -433,9 +433,7 @@ function MediaManagement() {
               </FormGroup>
 
               <FormGroup size={sizes.MEDIUM}>
-                <FormLabel>
-                  {translate('RefreshMonitoredOnly')}
-                </FormLabel>
+                <FormLabel>{translate('RefreshMonitoredOnly')}</FormLabel>
 
                 <FormInputGroup
                   type={inputTypes.CHECK}
