@@ -194,7 +194,11 @@ function MediaManagement() {
                       !settings.createEmptyMovieFolders.value)
                   }
                   name="createEmptyMovieFolders"
-                  helpText={translate('CreateEmptyMovieFoldersHelpText')}
+                  helpText={
+                    settings.placeInRootFolder.value
+                      ? translate('CreateEmptyMovieFoldersDisabledHelpText')
+                      : translate('CreateEmptyMovieFoldersHelpText')
+                  }
                   onChange={handleInputChange}
                   {...settings.createEmptyMovieFolders}
                 />

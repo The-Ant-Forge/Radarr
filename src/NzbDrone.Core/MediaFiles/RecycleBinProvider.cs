@@ -190,8 +190,8 @@ namespace NzbDrone.Core.MediaFiles
                 }
                 catch (UnauthorizedAccessException ex)
                 {
-                    // Handle and log permissions errors, move to next file
-                    _logger.Error(ex.Message);
+                    _logger.Warn("Unable to delete recycled file due to permissions: {0}. Check folder permissions.", file);
+                    _logger.Debug(ex, ex.Message);
                     continue;
                 }
             }
