@@ -12,10 +12,10 @@ Tracking deferred items, known debt, and planned work.
 - [x] **F9**: Add cross-movie scope validation in bulk file editor _(done: b257a81)_
 - [x] **F13**: ~~PlaceInRootFolder config toggle migration~~ — downgraded: toggle only affects new movies, existing paths stay valid. Mixed layout is cosmetic, not a data integrity issue. All scan/delete guards handle both layouts.
 - [x] **F14**: ~~Path consistency validation in MediaFileTableCleanupService~~ — downgraded: cleanup correctly marks moved files as missing. User reconnects via rescan or movie edit. This is existing Radarr behavior by design.
-- [ ] **F15**: Path-level scan locking to prevent concurrent scans of same folder
+- [x] **F15**: Path-level scan locking to prevent concurrent scans of same folder _(done: ConcurrentDictionary+SemaphoreSlim scan lock + folder LastWriteTime early exit with LastDiskScanTime on Movie)_
 - [ ] **F18**: Config snapshot reads to prevent mid-operation config changes
-- [ ] **F23**: Refactor refresh loop to use TMDb bulk API (SkyHookProxy.GetBulkMovieInfo)
-- [ ] **F40**: Integration test matrix for PlaceInRootFolder + RefreshMonitoredOnly combined
+- [x] **F23**: Refactor refresh loop to use TMDb bulk API _(done: bulk metadata fetch via GetBulkMovieInfo with per-movie fallback, credits skipped in bulk mode)_
+- [x] **F40**: Integration test matrix for PlaceInRootFolder + RefreshMonitoredOnly combined _(done: PlaceInRootFolderFixture for scan tests, RefreshMovieBulkFixture for refresh+bulk API tests)_
 
 ### Out of Scope
 

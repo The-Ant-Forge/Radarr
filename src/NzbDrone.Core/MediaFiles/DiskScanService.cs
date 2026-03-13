@@ -1,9 +1,11 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using NLog;
 using NzbDrone.Common.Disk;
 using NzbDrone.Common.Extensions;
@@ -69,12 +71,41 @@ namespace NzbDrone.Core.MediaFiles
             _logger = logger;
         }
 
+        private static readonly ConcurrentDictionary<string, SemaphoreSlim> _scanLocks =
+            new ConcurrentDictionary<string, SemaphoreSlim>(StringComparer.OrdinalIgnoreCase);
+
+        // Visible for testing — clears stale locks between test runs
+        internal static void ResetScanLocks()
+        {
+            _scanLocks.Clear();
+        }
+
         private static readonly Regex ExcludedExtrasSubFolderRegex = new Regex(@"(?:\\|\/|^)(?:extras|extrafanart|behind the scenes|deleted scenes|featurettes|interviews|other|scenes|sample[s]?|shorts|trailers)(?:\\|\/)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex ExcludedSubFoldersRegex = new Regex(@"(?:\\|\/|^)(?:@eadir|\.@__thumb|plex versions|\.[^\\/]+)(?:\\|\/)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex ExcludedExtraFilesRegex = new Regex(@"(-(trailer|other|behindthescenes|deleted|featurette|interview|scene|short)\.[^.]+$)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex ExcludedFilesRegex = new Regex(@"^\.(_|unmanic|DS_Store$)|^Thumbs\.db$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         public void Scan(Movie movie)
+        {
+            var scanLock = _scanLocks.GetOrAdd(movie.Path, _ => new SemaphoreSlim(1, 1));
+
+            if (!scanLock.Wait(0))
+            {
+                _logger.Debug("Scan already in progress for '{0}', skipping", movie.Path);
+                return;
+            }
+
+            try
+            {
+                ScanInternal(movie);
+            }
+            finally
+            {
+                scanLock.Release();
+            }
+        }
+
+        private void ScanInternal(Movie movie)
         {
             var rootFolder = _rootFolderService.GetBestRootFolderPath(movie.Path);
 
@@ -94,6 +125,27 @@ namespace NzbDrone.Core.MediaFiles
                     _logger.Warn("Movie's root folder ({0}) is empty. Rescan will not update movies as a failsafe.", rootFolder);
                     _eventAggregator.PublishEvent(new MovieScanSkippedEvent(movie, MovieScanSkippedReason.RootFolderIsEmpty));
                     return;
+                }
+            }
+
+            // Skip scan if folder hasn't been modified since last scan
+            if (movieFolderExists && movie.LastDiskScanTime.HasValue)
+            {
+                try
+                {
+                    var folderLastWrite = _diskProvider.FolderGetLastWrite(movie.Path);
+
+                    if (folderLastWrite < movie.LastDiskScanTime.Value)
+                    {
+                        _logger.Debug("Skipping scan of {0}: folder unchanged since last scan ({1})",
+                            movie.Title,
+                            movie.LastDiskScanTime.Value);
+                        return;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.Debug(ex, "Unable to check folder last write time for {0}, proceeding with scan", movie.Path);
                 }
             }
 
@@ -232,6 +284,10 @@ namespace NzbDrone.Core.MediaFiles
         private void CompletedScanning(Movie movie, List<string> possibleExtraFiles)
         {
             _logger.Info("Completed scanning disk for {0}", movie.Title);
+
+            movie.LastDiskScanTime = DateTime.UtcNow;
+            _movieService.UpdateLastDiskScanTime(movie);
+
             _eventAggregator.PublishEvent(new MovieScannedEvent(movie, possibleExtraFiles));
         }
 

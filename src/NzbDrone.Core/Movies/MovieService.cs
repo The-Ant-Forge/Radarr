@@ -45,6 +45,7 @@ namespace NzbDrone.Core.Movies
         Movie UpdateMovie(Movie movie);
         List<Movie> UpdateMovie(List<Movie> movies, bool useExistingRelativeFolder);
         void UpdateLastSearchTime(Movie movie);
+        void UpdateLastDiskScanTime(Movie movie);
         List<int> GetRecommendedTmdbIds();
         bool MoviePathExists(string folder);
         void RemoveAddOptions(Movie movie);
@@ -297,6 +298,11 @@ namespace NzbDrone.Core.Movies
         public void UpdateLastSearchTime(Movie movie)
         {
             _movieRepository.SetFields(movie, e => e.LastSearchTime);
+        }
+
+        public void UpdateLastDiskScanTime(Movie movie)
+        {
+            _movieRepository.SetFields(movie, e => e.LastDiskScanTime);
         }
 
         public bool MoviePathExists(string folder)

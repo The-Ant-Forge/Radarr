@@ -28,13 +28,16 @@ namespace NzbDrone.Core.Test.MediaFiles.DiskScanServiceTests
         [SetUp]
         public void Setup()
         {
+            DiskScanService.ResetScanLocks();
+
             _rootFolder = @"C:\Test\Movies".AsOsAgnostic();
             _otherMovieFolder = @"C:\Test\Movies\OtherMovie".AsOsAgnostic();
             var movieFolder = @"C:\Test\Movies\Movie".AsOsAgnostic();
 
             _movie = Builder<Movie>.CreateNew()
                 .With(s => s.Path = movieFolder)
-                                     .Build();
+                .With(s => s.LastDiskScanTime = null)
+                .Build();
 
             Mocker.GetMock<IDiskProvider>()
                   .Setup(s => s.FolderExists(It.IsAny<string>()))

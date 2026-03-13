@@ -86,17 +86,80 @@ namespace NzbDrone.Core.Movies
             }
             catch (MovieNotFoundException)
             {
-                if (movieMetadata.Status != MovieStatusType.Deleted)
-                {
-                    movieMetadata.Status = MovieStatusType.Deleted;
-                    _movieMetadataService.Upsert(movieMetadata);
-                    _logger.Debug("Movie marked as deleted on TMDb for {0}", movie.Title);
-                    _eventAggregator.PublishEvent(new MovieUpdatedEvent(movie));
-                }
-
+                MarkMovieAsDeleted(movie, movieMetadata);
                 throw;
             }
 
+            ApplyMetadataUpdate(movie, movieMetadata, movieInfo);
+            _creditService.UpdateCredits(credits, movieMetadata);
+
+            _movieMetadataService.Upsert(movieMetadata);
+            movie.MovieMetadata = movieMetadata;
+
+            _logger.Debug("Finished movie metadata refresh for {0}", movieMetadata.Title);
+            _eventAggregator.PublishEvent(new MovieUpdatedEvent(movie));
+
+            return movie;
+        }
+
+        private Dictionary<int, Movie> RefreshMovieInfoBulk(List<Movie> movies)
+        {
+            var tmdbIds = movies.Select(m => m.TmdbId).ToList();
+            _logger.Info("Bulk refreshing metadata for {0} movies", tmdbIds.Count);
+
+            List<MovieMetadata> bulkInfo;
+
+            try
+            {
+                bulkInfo = _movieInfo.GetBulkMovieInfo(tmdbIds);
+            }
+            catch (Exception e)
+            {
+                _logger.Error(e, "Failed to bulk refresh metadata, falling back to individual refresh");
+                return null;
+            }
+
+            var bulkInfoByTmdbId = bulkInfo.ToDictionary(m => m.TmdbId);
+            var refreshedMovies = new Dictionary<int, Movie>();
+
+            foreach (var movie in movies)
+            {
+                if (!bulkInfoByTmdbId.TryGetValue(movie.TmdbId, out var movieInfo))
+                {
+                    // Movie not returned by bulk API — may have been removed from TMDb
+                    var movieMetadata = _movieMetadataService.Get(movie.MovieMetadataId);
+                    MarkMovieAsDeleted(movie, movieMetadata);
+                    _logger.Error("Movie '{0}' (TMDb {1}) was not found in bulk response, it may have been removed from The Movie Database.", movie.Title, movie.TmdbId);
+                    refreshedMovies[movie.Id] = movie;
+                    continue;
+                }
+
+                try
+                {
+                    var movieMetadata = _movieMetadataService.Get(movie.MovieMetadataId);
+                    ApplyMetadataUpdate(movie, movieMetadata, movieInfo);
+
+                    // Credits are not included in bulk responses — skip credit update
+                    _movieMetadataService.Upsert(movieMetadata);
+                    movie.MovieMetadata = movieMetadata;
+
+                    _logger.Debug("Finished movie metadata refresh for {0}", movieMetadata.Title);
+                    _eventAggregator.PublishEvent(new MovieUpdatedEvent(movie));
+
+                    refreshedMovies[movie.Id] = movie;
+                }
+                catch (Exception e)
+                {
+                    _logger.Error(e, "Couldn't apply bulk refresh info for {0}", movie);
+                }
+            }
+
+            _logger.Info("Bulk refresh complete: {0}/{1} movies updated", refreshedMovies.Count, movies.Count);
+            return refreshedMovies;
+        }
+
+        private void ApplyMetadataUpdate(Movie movie, MovieMetadata movieMetadata, MovieMetadata movieInfo)
+        {
             if (movieMetadata.TmdbId != movieInfo.TmdbId)
             {
                 _logger.Warn("Movie '{0}' (TMDb: {1}) was replaced with '{2}' (TMDb: {3}), because the original was a duplicate.", movie.Title, movie.TmdbId, movieInfo.Title, movieInfo.TmdbId);
@@ -159,18 +222,18 @@ namespace NzbDrone.Core.Movies
             }
 
             movieMetadata.AlternativeTitles = _alternativeTitleService.UpdateTitles(movieInfo.AlternativeTitles, movieMetadata);
-
             _movieTranslationService.UpdateTranslations(movieInfo.Translations, movieMetadata);
-            _creditService.UpdateCredits(credits, movieMetadata);
+        }
 
-            _movieMetadataService.Upsert(movieMetadata);
-
-            movie.MovieMetadata = movieMetadata;
-
-            _logger.Debug("Finished movie metadata refresh for {0}", movieMetadata.Title);
-            _eventAggregator.PublishEvent(new MovieUpdatedEvent(movie));
-
-            return movie;
+        private void MarkMovieAsDeleted(Movie movie, MovieMetadata movieMetadata)
+        {
+            if (movieMetadata.Status != MovieStatusType.Deleted)
+            {
+                movieMetadata.Status = MovieStatusType.Deleted;
+                _movieMetadataService.Upsert(movieMetadata);
+                _logger.Debug("Movie marked as deleted on TMDb for {0}", movie.Title);
+                _eventAggregator.PublishEvent(new MovieUpdatedEvent(movie));
+            }
         }
 
         private void RescanMovie(Movie movie, bool isNew, CommandTrigger trigger)
@@ -287,11 +350,47 @@ namespace NzbDrone.Core.Movies
                     updatedTmdbMovies = _movieInfo.GetChangedMovies(message.LastStartTime.Value);
                 }
 
+                // Partition movies into those needing refresh and those that can be skipped
+                var moviesToRefresh = new List<Movie>();
+                var moviesToSkip = new List<Movie>();
+
                 foreach (var movie in allMovies)
                 {
-                    var movieLocal = movie;
-                    if ((updatedTmdbMovies.Count == 0 && _checkIfMovieShouldBeRefreshed.ShouldRefresh(movie.MovieMetadata)) || updatedTmdbMovies.Contains(movie.TmdbId) || message.Trigger == CommandTrigger.Manual)
+                    if ((updatedTmdbMovies.Count == 0 && _checkIfMovieShouldBeRefreshed.ShouldRefresh(movie.MovieMetadata)) ||
+                        updatedTmdbMovies.Contains(movie.TmdbId) ||
+                        message.Trigger == CommandTrigger.Manual)
                     {
+                        moviesToRefresh.Add(movie);
+                    }
+                    else
+                    {
+                        _logger.Debug("Skipping refresh of movie: {0}. Reason: {1}",
+                            movie.Title,
+                            updatedTmdbMovies.Count > 0 ? "not in TMDb changes list" : "refresh interval not met");
+                        moviesToSkip.Add(movie);
+                    }
+                }
+
+                // Bulk refresh movies that need updating (falls back to individual on failure)
+                Dictionary<int, Movie> bulkRefreshed = null;
+
+                if (moviesToRefresh.Count > 1)
+                {
+                    bulkRefreshed = RefreshMovieInfoBulk(moviesToRefresh);
+                }
+
+                foreach (var movie in moviesToRefresh)
+                {
+                    var movieLocal = movie;
+
+                    if (bulkRefreshed != null && bulkRefreshed.TryGetValue(movie.Id, out var refreshed))
+                    {
+                        // Already refreshed via bulk API
+                        movieLocal = refreshed;
+                    }
+                    else
+                    {
+                        // Bulk failed or single movie — fall back to individual refresh
                         try
                         {
                             movieLocal = RefreshMovieInfo(movieLocal.Id);
@@ -305,18 +404,16 @@ namespace NzbDrone.Core.Movies
                         {
                             _logger.Error(e, "Couldn't refresh info for {0}", movieLocal);
                         }
+                    }
 
-                        UpdateTags(movie, false);
-                        RescanMovieIfPathNotScanned(movieLocal, false, trigger, scannedPaths);
-                    }
-                    else
-                    {
-                        _logger.Debug("Skipping refresh of movie: {0}. Reason: {1}",
-                            movieLocal.Title,
-                            updatedTmdbMovies.Count > 0 ? "not in TMDb changes list" : "refresh interval not met");
-                        UpdateTags(movie, false);
-                        RescanMovieIfPathNotScanned(movieLocal, false, trigger, scannedPaths);
-                    }
+                    UpdateTags(movie, false);
+                    RescanMovieIfPathNotScanned(movieLocal, false, trigger, scannedPaths);
+                }
+
+                foreach (var movie in moviesToSkip)
+                {
+                    UpdateTags(movie, false);
+                    RescanMovieIfPathNotScanned(movie, false, trigger, scannedPaths);
                 }
             }
 
