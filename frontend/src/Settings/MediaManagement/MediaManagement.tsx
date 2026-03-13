@@ -436,7 +436,11 @@ function MediaManagement() {
                 />
               </FormGroup>
 
-              <FormGroup size={sizes.MEDIUM}>
+              <FormGroup
+                advancedSettings={showAdvancedSettings}
+                isAdvanced={true}
+                size={sizes.MEDIUM}
+              >
                 <FormLabel>{translate('RefreshMonitoredOnly')}</FormLabel>
 
                 <FormInputGroup

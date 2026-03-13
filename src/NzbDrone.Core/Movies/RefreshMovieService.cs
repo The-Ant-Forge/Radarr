@@ -311,7 +311,9 @@ namespace NzbDrone.Core.Movies
                     }
                     else
                     {
-                        _logger.Debug("Skipping refresh of movie: {0}", movieLocal.Title);
+                        _logger.Debug("Skipping refresh of movie: {0}. Reason: {1}",
+                            movieLocal.Title,
+                            updatedTmdbMovies.Count > 0 ? "not in TMDb changes list" : "refresh interval not met");
                         UpdateTags(movie, false);
                         RescanMovieIfPathNotScanned(movieLocal, false, trigger, scannedPaths);
                     }
