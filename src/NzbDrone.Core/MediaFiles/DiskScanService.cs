@@ -158,6 +158,11 @@ namespace NzbDrone.Core.MediaFiles
                 }
 
                 _logger.Debug("PlaceInRootFolder: filtered {0} files to {1} for {2}", beforeCount, mediaFileList.Count, titleWithYear);
+
+                if (mediaFileList.Any())
+                {
+                    _logger.Trace("PlaceInRootFolder: matched files for {0}: {1}", movie.Title, string.Join(", ", mediaFileList.Select(Path.GetFileName)));
+                }
             }
 
             CleanMediaFiles(movie, mediaFileList);
