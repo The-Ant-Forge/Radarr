@@ -1,5 +1,5 @@
 import { orderBy } from 'lodash';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { createSelector } from 'reselect';
 import AppState from 'App/State/AppState';
@@ -14,6 +14,7 @@ import ModalHeader from 'Components/Modal/ModalHeader';
 import { inputTypes, kinds } from 'Helpers/Props';
 import Movie from 'Movie/Movie';
 import { bulkDeleteMovie, setDeleteOption } from 'Store/Actions/movieActions';
+import { fetchMediaManagementSettings } from 'Store/Actions/settingsActions';
 import createAllMoviesSelector from 'Store/Selectors/createAllMoviesSelector';
 import { InputChanged } from 'typings/inputs';
 import formatBytes from 'Utilities/Number/formatBytes';
@@ -35,7 +36,16 @@ function DeleteMovieModalContent(props: DeleteMovieModalContentProps) {
 
   const { addImportExclusion } = useSelector(selectDeleteOptions);
   const allMovies: Movie[] = useSelector(createAllMoviesSelector());
+  const placeInRootFolder = useSelector(
+    (state: AppState) =>
+      (state.settings.mediaManagement.item as { placeInRootFolder?: boolean })
+        .placeInRootFolder ?? false
+  );
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(fetchMediaManagementSettings());
+  }, [dispatch]);
 
   const [deleteFiles, setDeleteFiles] = useState(false);
 
@@ -125,26 +135,28 @@ function DeleteMovieModalContent(props: DeleteMovieModalContentProps) {
             />
           </FormGroup>
 
-          <FormGroup>
-            <FormLabel>
-              {movies.length > 1
-                ? translate('DeleteMovieFolders')
-                : translate('DeleteMovieFolder')}
-            </FormLabel>
+          {placeInRootFolder ? null : (
+            <FormGroup>
+              <FormLabel>
+                {movies.length > 1
+                  ? translate('DeleteMovieFolders')
+                  : translate('DeleteMovieFolder')}
+              </FormLabel>
 
-            <FormInputGroup
-              type={inputTypes.CHECK}
-              name="deleteFiles"
-              value={deleteFiles}
-              helpText={
-                movies.length > 1
-                  ? translate('DeleteMovieFoldersHelpText')
-                  : translate('DeleteMovieFolderHelpText')
-              }
-              kind="danger"
-              onChange={onDeleteFilesChange}
-            />
-          </FormGroup>
+              <FormInputGroup
+                type={inputTypes.CHECK}
+                name="deleteFiles"
+                value={deleteFiles}
+                helpText={
+                  movies.length > 1
+                    ? translate('DeleteMovieFoldersHelpText')
+                    : translate('DeleteMovieFolderHelpText')
+                }
+                kind="danger"
+                onChange={onDeleteFilesChange}
+              />
+            </FormGroup>
+          )}
         </div>
 
         <div className={styles.message}>

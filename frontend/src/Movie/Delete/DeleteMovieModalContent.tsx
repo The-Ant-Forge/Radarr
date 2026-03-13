@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import AppState from 'App/State/AppState';
 import FormGroup from 'Components/Form/FormGroup';
@@ -15,6 +15,7 @@ import { icons, inputTypes, kinds } from 'Helpers/Props';
 import { Statistics } from 'Movie/Movie';
 import useMovie from 'Movie/useMovie';
 import { deleteMovie, setDeleteOption } from 'Store/Actions/movieActions';
+import { fetchMediaManagementSettings } from 'Store/Actions/settingsActions';
 import { CheckInputChanged } from 'typings/inputs';
 import formatBytes from 'Utilities/Number/formatBytes';
 import translate from 'Utilities/String/translate';
@@ -39,6 +40,15 @@ function DeleteMovieModalContent({
   const { addImportExclusion } = useSelector(
     (state: AppState) => state.movies.deleteOptions
   );
+  const placeInRootFolder = useSelector(
+    (state: AppState) =>
+      (state.settings.mediaManagement.item as { placeInRootFolder?: boolean })
+        .placeInRootFolder ?? false
+  );
+
+  useEffect(() => {
+    dispatch(fetchMediaManagementSettings());
+  }, [dispatch]);
 
   const { movieFileCount = 0, sizeOnDisk = 0 } = statistics;
 
@@ -102,28 +112,30 @@ function DeleteMovieModalContent({
           />
         </FormGroup>
 
-        <FormGroup>
-          <FormLabel>
-            {movieFileCount === 0
-              ? translate('DeleteMovieFolder')
-              : translate('DeleteMovieFiles', { movieFileCount })}
-          </FormLabel>
+        {placeInRootFolder ? null : (
+          <FormGroup>
+            <FormLabel>
+              {movieFileCount === 0
+                ? translate('DeleteMovieFolder')
+                : translate('DeleteMovieFiles', { movieFileCount })}
+            </FormLabel>
 
-          <FormInputGroup
-            type={inputTypes.CHECK}
-            name="deleteFiles"
-            value={deleteFiles}
-            helpText={
-              movieFileCount === 0
-                ? translate('DeleteMovieFolderHelpText')
-                : translate('DeleteMovieFilesHelpText')
-            }
-            kind={kinds.DANGER}
-            onChange={handleDeleteFilesChange}
-          />
-        </FormGroup>
+            <FormInputGroup
+              type={inputTypes.CHECK}
+              name="deleteFiles"
+              value={deleteFiles}
+              helpText={
+                movieFileCount === 0
+                  ? translate('DeleteMovieFolderHelpText')
+                  : translate('DeleteMovieFilesHelpText')
+              }
+              kind={kinds.DANGER}
+              onChange={handleDeleteFilesChange}
+            />
+          </FormGroup>
+        )}
 
-        {deleteFiles ? (
+        {!placeInRootFolder && deleteFiles ? (
           <div className={styles.deleteFilesMessage}>
             <div>
               <InlineMarkdown
