@@ -136,22 +136,23 @@ namespace NzbDrone.Core.MediaFiles
             // to avoid reading media info from hundreds of unrelated files.
             if (_configService.PlaceInRootFolder && movie.Title.IsNotNullOrWhiteSpace())
             {
+                var allVideoFiles = mediaFileList;
                 var beforeCount = mediaFileList.Count;
-                var titleWithYear = $"{movie.Title} ({movie.Year})";
+                var titleWithYear = NormalizeForComparison($"{movie.Title} ({movie.Year})");
                 mediaFileList = mediaFileList.Where(f =>
                 {
-                    var fileName = Path.GetFileNameWithoutExtension(f);
+                    var fileName = NormalizeForComparison(Path.GetFileNameWithoutExtension(f));
                     return fileName != null && fileName.StartsWith(titleWithYear, StringComparison.OrdinalIgnoreCase);
                 }).ToList();
 
-                // Fall back to title-only match if year-match found nothing
+                // Fall back to title-only match if year-match found nothing (reuse cached file list)
                 if (mediaFileList.Count == 0)
                 {
-                    var movieTitle = movie.Title;
-                    mediaFileList = FilterPaths(movie.Path, GetVideoFiles(movie.Path))
+                    var movieTitle = NormalizeForComparison(movie.Title);
+                    mediaFileList = allVideoFiles
                         .Where(f =>
                         {
-                            var fileName = Path.GetFileNameWithoutExtension(f);
+                            var fileName = NormalizeForComparison(Path.GetFileNameWithoutExtension(f));
                             return fileName != null && fileName.StartsWith(movieTitle, StringComparison.OrdinalIgnoreCase);
                         }).ToList();
                 }
@@ -199,7 +200,7 @@ namespace NzbDrone.Core.MediaFiles
             }
 
             fileInfoStopwatch.Stop();
-            _logger.Trace("Reprocessing existing files complete for: {0} [{1}]", movie, decisionsStopwatch.Elapsed);
+            _logger.Trace("Reprocessing existing files complete for: {0} [{1}]", movie, fileInfoStopwatch.Elapsed);
 
             var possibleExtraFiles = new List<string>();
 
@@ -297,6 +298,12 @@ namespace NzbDrone.Core.MediaFiles
         {
             if (_configService.DeleteEmptyFolders)
             {
+                if (_configService.PlaceInRootFolder)
+                {
+                    _logger.Debug("PlaceInRootFolder: skipping empty folder cleanup for shared root folder");
+                    return;
+                }
+
                 _diskProvider.RemoveEmptySubfolders(path);
 
                 if (_diskProvider.FolderEmpty(path))
@@ -304,6 +311,16 @@ namespace NzbDrone.Core.MediaFiles
                     _diskProvider.DeleteFolder(path, true);
                 }
             }
+        }
+
+        private static string NormalizeForComparison(string value)
+        {
+            if (value == null)
+            {
+                return null;
+            }
+
+            return value.Normalize();
         }
 
         public void Execute(RescanMovieCommand message)
@@ -315,13 +332,16 @@ namespace NzbDrone.Core.MediaFiles
             }
             else
             {
-                var allMovies = _movieService.GetAllMovies();
+                List<Movie> allMovies;
 
                 if (_configService.RefreshMonitoredOnly)
                 {
-                    var totalCount = allMovies.Count;
-                    allMovies = allMovies.Where(m => m.Monitored).ToList();
-                    _logger.Debug("RefreshMonitoredOnly is enabled, scanning {0} of {1} movies", allMovies.Count, totalCount);
+                    allMovies = _movieService.GetMonitoredMovies();
+                    _logger.Debug("RefreshMonitoredOnly is enabled, scanning {0} monitored movies", allMovies.Count);
+                }
+                else
+                {
+                    allMovies = _movieService.GetAllMovies();
                 }
 
                 var scannedPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);

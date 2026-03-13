@@ -6,6 +6,7 @@ using NLog;
 using NzbDrone.Common.Disk;
 using NzbDrone.Common.Extensions;
 using NzbDrone.Common.Instrumentation.Extensions;
+using NzbDrone.Core.Configuration;
 using NzbDrone.Core.MediaFiles.Commands;
 using NzbDrone.Core.MediaFiles.Events;
 using NzbDrone.Core.Messaging.Commands;
@@ -29,6 +30,7 @@ namespace NzbDrone.Core.MediaFiles
         private readonly IMoveMovieFiles _movieFileMover;
         private readonly IEventAggregator _eventAggregator;
         private readonly IBuildFileNames _filenameBuilder;
+        private readonly IConfigService _configService;
         private readonly IDiskProvider _diskProvider;
         private readonly Logger _logger;
 
@@ -37,6 +39,7 @@ namespace NzbDrone.Core.MediaFiles
                                       IMoveMovieFiles movieFileMover,
                                       IEventAggregator eventAggregator,
                                       IBuildFileNames filenameBuilder,
+                                      IConfigService configService,
                                       IDiskProvider diskProvider,
                                       Logger logger)
         {
@@ -45,6 +48,7 @@ namespace NzbDrone.Core.MediaFiles
             _movieFileMover = movieFileMover;
             _eventAggregator = eventAggregator;
             _filenameBuilder = filenameBuilder;
+            _configService = configService;
             _diskProvider = diskProvider;
             _logger = logger;
         }
@@ -129,7 +133,10 @@ namespace NzbDrone.Core.MediaFiles
 
             if (renamed.Any())
             {
-                _diskProvider.RemoveEmptySubfolders(movie.Path);
+                if (!_configService.PlaceInRootFolder)
+                {
+                    _diskProvider.RemoveEmptySubfolders(movie.Path);
+                }
 
                 _eventAggregator.PublishEvent(new MovieRenamedEvent(movie, renamed));
             }

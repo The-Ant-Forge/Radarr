@@ -11,6 +11,7 @@ using NzbDrone.Core.Messaging;
 using NzbDrone.Core.Messaging.Events;
 using NzbDrone.Core.Movies;
 using NzbDrone.Core.Movies.Events;
+using NzbDrone.Core.RootFolders;
 
 namespace NzbDrone.Core.MediaFiles
 {
@@ -28,6 +29,7 @@ namespace NzbDrone.Core.MediaFiles
         private readonly IMediaFileService _mediaFileService;
         private readonly IMovieService _movieService;
         private readonly IConfigService _configService;
+        private readonly IRootFolderService _rootFolderService;
         private readonly IEventAggregator _eventAggregator;
         private readonly Logger _logger;
 
@@ -36,6 +38,7 @@ namespace NzbDrone.Core.MediaFiles
                                         IMediaFileService mediaFileService,
                                         IMovieService movieService,
                                         IConfigService configService,
+                                        IRootFolderService rootFolderService,
                                         IEventAggregator eventAggregator,
                                         Logger logger)
         {
@@ -44,6 +47,7 @@ namespace NzbDrone.Core.MediaFiles
             _mediaFileService = mediaFileService;
             _movieService = movieService;
             _configService = configService;
+            _rootFolderService = rootFolderService;
             _eventAggregator = eventAggregator;
             _logger = logger;
         }
@@ -51,7 +55,12 @@ namespace NzbDrone.Core.MediaFiles
         public void DeleteMovieFile(Movie movie, MovieFile movieFile)
         {
             var fullPath = Path.Combine(movie.Path, movieFile.RelativePath);
-            var rootFolder = _diskProvider.GetParentFolder(movie.Path);
+            var rootFolder = _rootFolderService.GetBestRootFolderPath(movie.Path);
+
+            if (string.IsNullOrEmpty(rootFolder))
+            {
+                rootFolder = _diskProvider.GetParentFolder(movie.Path);
+            }
 
             if (!_diskProvider.FolderExists(rootFolder))
             {
@@ -131,6 +140,12 @@ namespace NzbDrone.Core.MediaFiles
         {
             if (_configService.DeleteEmptyFolders)
             {
+                if (_configService.PlaceInRootFolder)
+                {
+                    _logger.Debug("PlaceInRootFolder: skipping empty folder cleanup for shared root folder");
+                    return;
+                }
+
                 var movie = message.MovieFile.Movie;
                 var moviePath = movie.Path;
                 var folder = message.MovieFile.Path.GetParentPath();

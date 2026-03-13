@@ -148,6 +148,11 @@ namespace Radarr.Api.V3.MovieFiles
 
             _mediaFileService.Update(movieFiles);
 
+            if (!movieFiles.Any())
+            {
+                return Accepted(new List<MovieFileResource>());
+            }
+
             var movie = _movieService.GetMovie(movieFiles.First().MovieId);
 
             return Accepted(movieFiles.ConvertAll(f => f.ToResource(movie, _upgradableSpecification, _formatCalculator)));
@@ -178,10 +183,15 @@ namespace Radarr.Api.V3.MovieFiles
             }
 
             var movieFiles = _mediaFileService.GetMovies(resource.MovieFileIds);
-            var movie = _movieService.GetMovie(movieFiles.First().MovieId);
+
+            if (!movieFiles.Any())
+            {
+                throw new NzbDroneClientException(HttpStatusCode.NotFound, "No movie files found for the given IDs");
+            }
 
             foreach (var movieFile in movieFiles)
             {
+                var movie = _movieService.GetMovie(movieFile.MovieId);
                 _mediaFileDeletionService.DeleteMovieFile(movie, movieFile);
             }
 
@@ -231,6 +241,11 @@ namespace Radarr.Api.V3.MovieFiles
             }
 
             _mediaFileService.Update(movieFiles);
+
+            if (!movieFiles.Any())
+            {
+                return Accepted(new List<MovieFileResource>());
+            }
 
             var movie = _movieService.GetMovie(movieFiles.First().MovieId);
 

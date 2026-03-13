@@ -77,11 +77,18 @@ namespace NzbDrone.Core.MediaFiles.MovieImport
 
                 try
                 {
-                    // check if already imported
+                    // check if already imported (in-memory batch check + database check)
                     if (importResults.Select(r => r.ImportDecision.LocalMovie.Movie)
                                          .Select(m => m.Id).Contains(localMovie.Movie.Id))
                     {
                         importResults.Add(new ImportResult(importDecision, "Movie has already been imported"));
+                        continue;
+                    }
+
+                    if (!newDownload && localMovie.Movie.Id > 0 && _mediaFileService.GetFilesByMovie(localMovie.Movie.Id).Any())
+                    {
+                        _logger.Debug("Movie {0} already has a file in the database, skipping duplicate import", localMovie.Movie);
+                        importResults.Add(new ImportResult(importDecision, "Movie already has a file imported"));
                         continue;
                     }
 
@@ -185,7 +192,10 @@ namespace NzbDrone.Core.MediaFiles.MovieImport
                     _logger.Warn(e, "Couldn't import movie " + localMovie);
                     importResults.Add(new ImportResult(importDecision, "Failed to import movie, Destination already exists."));
 
-                    _commandQueueManager.Push(new RescanMovieCommand(localMovie.Movie.Id));
+                    if (localMovie.Movie.Id > 0)
+                    {
+                        _commandQueueManager.Push(new RescanMovieCommand(localMovie.Movie.Id));
+                    }
                 }
                 catch (RecycleBinException e)
                 {

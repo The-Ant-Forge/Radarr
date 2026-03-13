@@ -138,6 +138,11 @@ namespace Radarr.Api.V3.Movies
         [HttpDelete]
         public object DeleteMovies([FromBody] MovieEditorResource resource)
         {
+            if (resource.MovieIds == null || !resource.MovieIds.Any())
+            {
+                throw new Radarr.Http.REST.BadRequestException("movieIds must be provided");
+            }
+
             _movieService.DeleteMovies(resource.MovieIds, resource.DeleteFiles, resource.AddImportExclusion);
 
             return new { };
