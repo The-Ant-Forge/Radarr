@@ -51,6 +51,8 @@ build_backend() {
         -t:PublishAllRids
 
     echo "Building tray app..."
+    # TreatWarningsAsErrors=false: upstream WinForms code has SA1200 warnings
+    # that we can't fix without diverging; suppress for tray app only
     dotnet publish src/NzbDrone/Radarr.csproj \
         -c Release -r win-x64 -f net8.0-windows \
         --self-contained true \

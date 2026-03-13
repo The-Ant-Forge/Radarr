@@ -224,6 +224,22 @@ A review document in `docs/Code-Review-YYMMDD.md` (or similar) with:
 2. Review and approve findings with the user
 3. Implement approved items in focused commits
 4. Re-run tests after each change
+5. On completion of review items update the code review doc to reflect tasks done, deferred or ignored.
+
+## Upstream Merge Strategy
+This fork maintains feature parity with upstream's `develop` branch (Radarr/Radarr).
+New features (PlaceInRootFolder, RefreshMonitoredOnly, UnmonitorOnCutoffMet) are
+implemented as config toggles disabled by default, keeping the codebase compatible
+with upstream. UpdateMechanism is set to External in production to prevent upstream
+auto-updates from overwriting fork changes.
+
+To incorporate upstream changes:
+1. `git fetch upstream`
+2. `git log develop..upstream/develop` to review new commits
+3. `git rebase upstream/develop` (or cherry-pick for selective merges)
+4. Resolve conflicts — our changes are primarily in validators, DiskScanService,
+   RefreshMovieService, and frontend Settings/MediaManagement
+5. Run tests and verify build before pushing
 
 ## Releases
 Before doing a release check that all primary document are updated and current with respect to what you know of the changes made. This includes TODO.md, completed.md, parrot spec.md and readme.md (in the root). Then do a commit and push to capture those changes int he remote before starting the normal release procedure.
