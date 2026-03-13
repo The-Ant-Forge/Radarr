@@ -5,7 +5,10 @@ using Moq;
 using NUnit.Framework;
 using NzbDrone.Common.Extensions;
 using NzbDrone.Core.AutoTagging;
+using NzbDrone.Core.Configuration;
 using NzbDrone.Core.Exceptions;
+using NzbDrone.Core.MediaFiles;
+using NzbDrone.Core.Messaging.Commands;
 using NzbDrone.Core.MetadataSource;
 using NzbDrone.Core.Movies;
 using NzbDrone.Core.Movies.Collections;
@@ -133,6 +136,77 @@ namespace NzbDrone.Core.Test.MovieTests
                 .Verify(v => v.Upsert(It.IsAny<MovieMetadata>()), Times.Never());
 
             ExceptionVerification.ExpectedErrors(1);
+        }
+
+        [Test]
+        public void should_use_monitored_movies_when_refresh_monitored_only_enabled()
+        {
+            Mocker.GetMock<IConfigService>()
+                .Setup(s => s.RefreshMonitoredOnly)
+                .Returns(true);
+
+            Mocker.GetMock<IMovieService>()
+                .Setup(s => s.GetMonitoredMovies())
+                .Returns(new List<Movie>());
+
+            Subject.Execute(new RefreshMovieCommand { Trigger = CommandTrigger.Manual });
+
+            Mocker.GetMock<IMovieService>()
+                .Verify(v => v.GetMonitoredMovies(), Times.Once());
+
+            Mocker.GetMock<IMovieService>()
+                .Verify(v => v.GetAllMovies(), Times.Never());
+        }
+
+        [Test]
+        public void should_use_all_movies_when_refresh_monitored_only_disabled()
+        {
+            Mocker.GetMock<IConfigService>()
+                .Setup(s => s.RefreshMonitoredOnly)
+                .Returns(false);
+
+            Mocker.GetMock<IMovieService>()
+                .Setup(s => s.GetAllMovies())
+                .Returns(new List<Movie>());
+
+            Subject.Execute(new RefreshMovieCommand { Trigger = CommandTrigger.Manual });
+
+            Mocker.GetMock<IMovieService>()
+                .Verify(v => v.GetAllMovies(), Times.Once());
+
+            Mocker.GetMock<IMovieService>()
+                .Verify(v => v.GetMonitoredMovies(), Times.Never());
+        }
+
+        [Test]
+        public void should_deduplicate_scan_paths()
+        {
+            var sharedPath = @"C:\Test\Movies\Shared".AsOsAgnostic();
+
+            var movie1 = Builder<Movie>.CreateNew()
+                .With(s => s.Id = 1)
+                .With(s => s.Path = sharedPath)
+                .With(s => s.MovieMetadata.Value.Status = MovieStatusType.Released)
+                .Build();
+
+            var movie2 = Builder<Movie>.CreateNew()
+                .With(s => s.Id = 2)
+                .With(s => s.Path = sharedPath)
+                .With(s => s.MovieMetadata.Value.Status = MovieStatusType.Released)
+                .Build();
+
+            Mocker.GetMock<IMovieService>()
+                .Setup(s => s.GetAllMovies())
+                .Returns(new List<Movie> { movie1, movie2 });
+
+            Mocker.GetMock<IAutoTaggingService>()
+                .Setup(s => s.GetTagChanges(It.IsAny<Movie>()))
+                .Returns(new AutoTaggingChanges());
+
+            Subject.Execute(new RefreshMovieCommand { Trigger = CommandTrigger.Manual });
+
+            Mocker.GetMock<IDiskScanService>()
+                .Verify(v => v.Scan(It.IsAny<Movie>()), Times.Once());
         }
     }
 }
