@@ -105,6 +105,24 @@ namespace NzbDrone.Core.MediaFiles
 
                 foreach (var movie in message.Movies)
                 {
+                    // When PlaceInRootFolder is enabled, movie.Path IS the root folder.
+                    // Deleting it would wipe all movies — never allow this.
+                    if (_configService.PlaceInRootFolder)
+                    {
+                        var rootFolder = _rootFolderService.GetBestRootFolderPath(movie.Path);
+
+                        if (movie.Path.PathEquals(rootFolder))
+                        {
+                            _logger.Warn(
+                                "PlaceInRootFolder: refusing to delete root folder '{0}' for movie '{1}'. Only individual files should be deleted in this mode.",
+                                movie.Path,
+                                movie.Title);
+                            continue;
+                        }
+                    }
+
+                    var skipMovie = false;
+
                     foreach (var s in allMovies)
                     {
                         if (s.Key == movie.Id)
@@ -115,14 +133,21 @@ namespace NzbDrone.Core.MediaFiles
                         if (movie.Path.IsParentPath(s.Value))
                         {
                             _logger.Error("Movie path: '{0}' is a parent of another movie, not deleting files.", movie.Path);
-                            return;
+                            skipMovie = true;
+                            break;
                         }
 
                         if (movie.Path.PathEquals(s.Value))
                         {
                             _logger.Error("Movie path: '{0}' is the same as another movie, not deleting files.", movie.Path);
-                            return;
+                            skipMovie = true;
+                            break;
                         }
+                    }
+
+                    if (skipMovie)
+                    {
+                        continue;
                     }
 
                     if (_diskProvider.FolderExists(movie.Path))

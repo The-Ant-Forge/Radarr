@@ -227,15 +227,24 @@ namespace NzbDrone.Core.MediaFiles
                 importResults.Any(i => i.Result == ImportResultType.Imported) &&
                 ShouldDeleteFolder(directoryInfo, movie))
             {
-                _logger.Debug("Deleting folder after importing valid files");
-
-                try
+                // Never delete a folder that is a configured root folder or the movie's own path
+                // when PlaceInRootFolder is enabled (movie.Path == root folder)
+                if (_movieService.MoviePathExists(directoryInfo.FullName))
                 {
-                    _diskProvider.DeleteFolder(directoryInfo.FullName, true);
+                    _logger.Warn("Import folder '{0}' is a movie path, not deleting after import", directoryInfo.FullName);
                 }
-                catch (IOException e)
+                else
                 {
-                    _logger.Debug(e, "Unable to delete folder after importing: {0}", e.Message);
+                    _logger.Debug("Deleting folder after importing valid files");
+
+                    try
+                    {
+                        _diskProvider.DeleteFolder(directoryInfo.FullName, true);
+                    }
+                    catch (IOException e)
+                    {
+                        _logger.Debug(e, "Unable to delete folder after importing: {0}", e.Message);
+                    }
                 }
             }
             else if (importResults.Empty())

@@ -153,9 +153,13 @@ namespace Radarr.Api.V3.MovieFiles
                 return Accepted(new List<MovieFileResource>());
             }
 
-            var movie = _movieService.GetMovie(movieFiles.First().MovieId);
-
-            return Accepted(movieFiles.ConvertAll(f => f.ToResource(movie, _upgradableSpecification, _formatCalculator)));
+            return Accepted(movieFiles.GroupBy(f => f.MovieId)
+                .SelectMany(g =>
+                {
+                    var movie = _movieService.GetMovie(g.Key);
+                    return g.Select(f => f.ToResource(movie, _upgradableSpecification, _formatCalculator));
+                })
+                .ToList());
         }
 
         [RestDeleteById]
@@ -247,9 +251,13 @@ namespace Radarr.Api.V3.MovieFiles
                 return Accepted(new List<MovieFileResource>());
             }
 
-            var movie = _movieService.GetMovie(movieFiles.First().MovieId);
-
-            return Accepted(movieFiles.ConvertAll(f => f.ToResource(movie, _upgradableSpecification, _formatCalculator)));
+            return Accepted(movieFiles.GroupBy(f => f.MovieId)
+                .SelectMany(g =>
+                {
+                    var movie = _movieService.GetMovie(g.Key);
+                    return g.Select(f => f.ToResource(movie, _upgradableSpecification, _formatCalculator));
+                })
+                .ToList());
         }
 
         [NonAction]
