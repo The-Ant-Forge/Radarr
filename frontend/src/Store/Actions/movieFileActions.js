@@ -141,6 +141,7 @@ export const persistState = [
 export const FETCH_MOVIE_FILES = 'movieFiles/fetchMovieFiles';
 export const DELETE_MOVIE_FILE = 'movieFiles/deleteMovieFile';
 export const DELETE_MOVIE_FILES = 'movieFiles/deleteMovieFiles';
+export const UNLINK_MOVIE_FILE = 'movieFiles/unlinkMovieFile';
 export const UPDATE_MOVIE_FILES = 'movieFiles/updateMovieFiles';
 export const CLEAR_MOVIE_FILES = 'movieFiles/clearMovieFiles';
 export const SET_MOVIE_FILES_SORT = 'movieFiles/setMovieFilesSort';
@@ -152,6 +153,7 @@ export const SET_MOVIE_FILES_TABLE_OPTION = 'movieFiles/setMovieFilesTableOption
 export const fetchMovieFiles = createThunk(FETCH_MOVIE_FILES);
 export const deleteMovieFile = createThunk(DELETE_MOVIE_FILE);
 export const deleteMovieFiles = createThunk(DELETE_MOVIE_FILES);
+export const unlinkMovieFile = createThunk(UNLINK_MOVIE_FILE);
 export const updateMovieFiles = createThunk(UPDATE_MOVIE_FILES);
 export const clearMovieFiles = createAction(CLEAR_MOVIE_FILES);
 export const setMovieFilesSort = createAction(SET_MOVIE_FILES_SORT);
@@ -191,6 +193,44 @@ export const actionHandlers = handleThunks({
           });
         })
       ]));
+    });
+  },
+
+  [UNLINK_MOVIE_FILE]: function(getState, payload, dispatch) {
+    const {
+      id: movieFileId,
+      movieEntity = movieEntities.MOVIES
+    } = payload;
+
+    const movieSection = _.last(movieEntity.split('.'));
+
+    dispatch(set({ section, isDeleting: true }));
+
+    const promise = createAjaxRequest({
+      url: `/movieFile/${movieFileId}/unlink`,
+      method: 'DELETE'
+    }).request;
+
+    promise.done(() => {
+      const movies = getState().movies.items;
+      const moviesWithRemovedFiles = _.filter(movies, { movieFileId });
+
+      dispatch(batchActions([
+        removeItem({ section, id: movieFileId }),
+        set({ section, isDeleting: false }),
+        ...moviesWithRemovedFiles.map((movie) => {
+          return updateItem({
+            section: movieSection,
+            ...movie,
+            movieFileId: 0,
+            hasFile: false
+          });
+        })
+      ]));
+    });
+
+    promise.fail(() => {
+      dispatch(set({ section, isDeleting: false }));
     });
   },
 

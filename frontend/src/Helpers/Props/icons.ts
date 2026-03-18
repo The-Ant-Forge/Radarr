@@ -78,6 +78,7 @@ import {
   faHome as fasHome,
   faInfoCircle as fasInfoCircle,
   faLanguage as fasLanguage,
+  faLinkSlash as fasLinkSlash,
   faLaptop as fasLaptop,
   faLevelUpAlt as fasLevelUpAlt,
   faListCheck as fasListCheck,
@@ -244,6 +245,7 @@ export const TEST = fasVial;
 export const TRANSLATE = fasLanguage;
 export const TRENDING = fasArrowTrendUp;
 export const UNGROUP = farObjectUngroup;
+export const UNLINK = fasLinkSlash;
 export const UNKNOWN = fasQuestion;
 export const UNMONITORED = farBookmark;
 export const UPDATE = fasRetweet;

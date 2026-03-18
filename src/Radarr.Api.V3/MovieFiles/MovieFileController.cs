@@ -177,6 +177,19 @@ namespace Radarr.Api.V3.MovieFiles
             _mediaFileDeletionService.DeleteMovieFile(movie, movieFile);
         }
 
+        [HttpDelete("{id:int}/unlink")]
+        public void UnlinkMovieFile(int id)
+        {
+            var movieFile = _mediaFileService.GetMovie(id);
+
+            if (movieFile == null)
+            {
+                throw new NzbDroneClientException(HttpStatusCode.NotFound, "Movie file not found");
+            }
+
+            _mediaFileService.Delete(movieFile, DeleteMediaFileReason.Manual);
+        }
+
         [HttpDelete("bulk")]
         [Consumes("application/json")]
         public object DeleteMovieFiles([FromBody] MovieFileListResource resource)

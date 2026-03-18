@@ -49,6 +49,7 @@ class MovieFileEditorTableContent extends Component {
                         columns={columns}
                         {...item}
                         onDeletePress={this.props.onDeletePress}
+                        onUnlinkPress={this.props.onUnlinkPress}
                       />
                     );
                   })
@@ -71,7 +72,8 @@ MovieFileEditorTableContent.propTypes = {
   sortDirection: PropTypes.oneOf(sortDirections.all),
   onTableOptionChange: PropTypes.func.isRequired,
   onSortPress: PropTypes.func.isRequired,
-  onDeletePress: PropTypes.func.isRequired
+  onDeletePress: PropTypes.func.isRequired,
+  onUnlinkPress: PropTypes.func.isRequired
 };
 
 export default MovieFileEditorTableContent;

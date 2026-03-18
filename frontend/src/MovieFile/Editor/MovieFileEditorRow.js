@@ -33,6 +33,7 @@ class MovieFileEditorRow extends Component {
 
     this.state = {
       isConfirmDeleteModalOpen: false,
+      isConfirmUnlinkModalOpen: false,
       isFileDetailsModalOpen: false,
       isFileEditModalOpen: false
     };
@@ -53,6 +54,20 @@ class MovieFileEditorRow extends Component {
 
   onConfirmDeleteModalClose = () => {
     this.setState({ isConfirmDeleteModalOpen: false });
+  };
+
+  onUnlinkPress = () => {
+    this.setState({ isConfirmUnlinkModalOpen: true });
+  };
+
+  onConfirmUnlink = () => {
+    this.setState({ isConfirmUnlinkModalOpen: false });
+
+    this.props.onUnlinkPress(this.props.id);
+  };
+
+  onConfirmUnlinkModalClose = () => {
+    this.setState({ isConfirmUnlinkModalOpen: false });
   };
 
   onFileDetailsPress = () => {
@@ -94,7 +109,8 @@ class MovieFileEditorRow extends Component {
     const {
       isFileDetailsModalOpen,
       isFileEditModalOpen,
-      isConfirmDeleteModalOpen
+      isConfirmDeleteModalOpen,
+      isConfirmUnlinkModalOpen
     } = this.state;
 
     const showQualityPlaceholder = !quality;
@@ -337,6 +353,12 @@ class MovieFileEditorRow extends Component {
                   />
 
                   <IconButton
+                    title={translate('UnlinkFile')}
+                    name={icons.UNLINK}
+                    onPress={this.onUnlinkPress}
+                  />
+
+                  <IconButton
                     title={translate('DeleteFile')}
                     name={icons.REMOVE}
                     onPress={this.onDeletePress}
@@ -359,6 +381,17 @@ class MovieFileEditorRow extends Component {
           movieFileId={id}
           isOpen={isFileEditModalOpen}
           onModalClose={this.onFileEditModalClose}
+        />
+
+        <ConfirmModal
+          isOpen={isConfirmUnlinkModalOpen}
+          ids={[id]}
+          kind={kinds.WARNING}
+          title={translate('UnlinkMovieFile')}
+          message={translate('UnlinkMovieFileHelpText')}
+          confirmLabel={translate('Unlink')}
+          onConfirm={this.onConfirmUnlink}
+          onCancel={this.onConfirmUnlinkModalClose}
         />
 
         <ConfirmModal
@@ -391,7 +424,8 @@ MovieFileEditorRow.propTypes = {
   mediaInfo: PropTypes.object,
   dateAdded: PropTypes.string,
   columns: PropTypes.arrayOf(PropTypes.object).isRequired,
-  onDeletePress: PropTypes.func.isRequired
+  onDeletePress: PropTypes.func.isRequired,
+  onUnlinkPress: PropTypes.func.isRequired
 };
 
 MovieFileEditorRow.defaultProps = {

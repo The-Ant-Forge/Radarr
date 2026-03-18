@@ -2,7 +2,7 @@ import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { createSelector } from 'reselect';
-import { deleteMovieFile, setMovieFilesSort, setMovieFilesTableOption } from 'Store/Actions/movieFileActions';
+import { deleteMovieFile, unlinkMovieFile, setMovieFilesSort, setMovieFilesTableOption } from 'Store/Actions/movieFileActions';
 import { fetchLanguages, fetchQualityProfileSchema } from 'Store/Actions/settingsActions';
 import createClientSideCollectionSelector from 'Store/Selectors/createClientSideCollectionSelector';
 import createMovieSelector from 'Store/Selectors/createMovieSelector';
@@ -45,6 +45,7 @@ const mapDispatchToProps = {
   fetchQualityProfileSchema,
   fetchLanguages,
   deleteMovieFile,
+  unlinkMovieFile,
   setMovieFilesTableOption,
   setMovieFilesSort
 };
@@ -68,6 +69,12 @@ class MovieFileEditorTableContentConnector extends Component {
     });
   };
 
+  onUnlinkPress = (movieFileId) => {
+    this.props.unlinkMovieFile({
+      id: movieFileId
+    });
+  };
+
   onTableOptionChange = (payload) => {
     this.props.setMovieFilesTableOption(payload);
   };
@@ -87,6 +94,7 @@ class MovieFileEditorTableContentConnector extends Component {
       <MovieFileEditorTableContent
         {...this.props}
         onDeletePress={this.onDeletePress}
+        onUnlinkPress={this.onUnlinkPress}
         onTableOptionChange={this.onTableOptionChange}
         onSortPress={this.onSortPress}
       />
@@ -101,6 +109,7 @@ MovieFileEditorTableContentConnector.propTypes = {
   fetchLanguages: PropTypes.func.isRequired,
   fetchQualityProfileSchema: PropTypes.func.isRequired,
   deleteMovieFile: PropTypes.func.isRequired,
+  unlinkMovieFile: PropTypes.func.isRequired,
   setMovieFilesTableOption: PropTypes.func.isRequired,
   setMovieFilesSort: PropTypes.func.isRequired
 };
