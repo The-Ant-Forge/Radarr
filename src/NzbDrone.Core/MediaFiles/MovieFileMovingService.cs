@@ -62,6 +62,7 @@ namespace NzbDrone.Core.MediaFiles
         {
             var newFileName = _buildFileNames.BuildFileName(movie, movieFile);
             var filePath = _buildFileNames.BuildFilePath(movie, newFileName, Path.GetExtension(movieFile.RelativePath));
+            filePath = RebaseForRootFolder(movie, filePath);
 
             EnsureMovieFolder(movieFile, movie, filePath);
 
@@ -74,6 +75,7 @@ namespace NzbDrone.Core.MediaFiles
         {
             var newFileName = _buildFileNames.BuildFileName(localMovie.Movie, movieFile, null, localMovie.CustomFormats);
             var filePath = _buildFileNames.BuildFilePath(localMovie.Movie, newFileName, Path.GetExtension(localMovie.Path));
+            filePath = RebaseForRootFolder(localMovie.Movie, filePath);
 
             EnsureMovieFolder(movieFile, localMovie, filePath);
 
@@ -86,6 +88,7 @@ namespace NzbDrone.Core.MediaFiles
         {
             var newFileName = _buildFileNames.BuildFileName(localMovie.Movie, movieFile, null, localMovie.CustomFormats);
             var filePath = _buildFileNames.BuildFilePath(localMovie.Movie, newFileName, Path.GetExtension(localMovie.Path));
+            filePath = RebaseForRootFolder(localMovie.Movie, filePath);
 
             EnsureMovieFolder(movieFile, localMovie, filePath);
 
@@ -117,7 +120,17 @@ namespace NzbDrone.Core.MediaFiles
                 throw new SameFilenameException("File not moved, source and destination are the same", movieFilePath);
             }
 
-            movieFile.RelativePath = movie.Path.GetRelativePath(destinationFilePath);
+            if (_configService.PlaceInRootFolder)
+            {
+                var rootFolder = _rootFolderService.GetBestRootFolderPath(movie.Path);
+                movieFile.RelativePath = rootFolder.IsNullOrWhiteSpace()
+                    ? movie.Path.GetRelativePath(destinationFilePath)
+                    : rootFolder.GetRelativePath(destinationFilePath);
+            }
+            else
+            {
+                movieFile.RelativePath = movie.Path.GetRelativePath(destinationFilePath);
+            }
 
             if (localMovie is not null)
             {
@@ -157,6 +170,29 @@ namespace NzbDrone.Core.MediaFiles
             _mediaFileAttributeService.SetFilePermissions(destinationFilePath);
 
             return movieFile;
+        }
+
+        private string RebaseForRootFolder(Movie movie, string filePath)
+        {
+            if (!_configService.PlaceInRootFolder)
+            {
+                return filePath;
+            }
+
+            var rootFolder = _rootFolderService.GetBestRootFolderPath(movie.Path);
+
+            if (rootFolder.IsNullOrWhiteSpace() || movie.Path.PathEquals(rootFolder))
+            {
+                return filePath;
+            }
+
+            // Legacy movie with individual folder path — rebase file into root folder
+            var fileName = Path.GetFileName(filePath);
+            var rebased = Path.Combine(rootFolder, fileName);
+
+            _logger.Debug("PlaceInRootFolder: rebasing destination from {0} to {1}", filePath, rebased);
+
+            return rebased;
         }
 
         private void EnsureMovieFolder(MovieFile movieFile, LocalMovie localMovie, string filePath)

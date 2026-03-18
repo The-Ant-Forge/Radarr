@@ -611,3 +611,75 @@ Fork is 10+ commits ahead with no documented merge approach.
 - N+1 query optimization sprint
 - React types 18→19 migration
 - ESLint 8→10 migration
+- FontAwesome 6→7 migration
+
+---
+
+## Resolution Status
+
+**Review completed**: 2026-03-13
+
+Of the 43 findings, 40 have been resolved (implemented, downgraded, or moved to
+out-of-scope). 1 item remains parked. 2 items were already out of scope.
+
+### Implemented
+
+| # | Finding | Commit | Notes |
+|---|---------|--------|-------|
+| F1/F2 | Guard root folder deletion in MediaFileDeletionService and DownloadedMovieImportService | `b257a81` | Added PlaceInRootFolder guards on all deletion paths |
+| F3 | RemoveEmptySubfolders on shared root | `b6ee4aa` | Skip when PlaceInRootFolder enabled |
+| F4 | RelativePath identity case in MovieFileMovingService | `2320e8b` | OS-aware PathEquals comparison |
+| F5 | DeleteMovieFile uses wrong parent as rootFolder | `b6ee4aa` | Use configured root folder |
+| F6 | Bulk file delete cross-movie context | `b257a81` | Group by MovieId |
+| F7 | Bulk delete early exit / partial deletion | `b257a81` | Per-movie processing with skip on conflict |
+| F8 | PlaceInRootFolder not checked in backend deletion | `b257a81` | Backend guard on all deletion paths |
+| F9 | Bulk file editor cross-movie scope validation | `b257a81` | Validate ownership per file |
+| F10 | No MovieIds validation in bulk movie delete | `b6ee4aa` | Added BadRequestException |
+| F11 | Missing null check on movieFiles.First() | `b6ee4aa` | Added empty check |
+| F15 | Concurrent scans on same path | `a0bddd5` | ConcurrentDictionary+SemaphoreSlim scan lock + folder LastWriteTime early exit with LastDiskScanTime on Movie (migration 243) |
+| F17 | Title-matching lacks Unicode normalization | `b6ee4aa` | NFC normalization via NormalizeForComparison helper |
+| F21 | Duplicate file enumeration in PlaceInRootFolder fallback | `b6ee4aa` | Cache initial GetVideoFiles result, reuse for fallback |
+| F22 | Missing media info cache | `f4e997d` | Hash-based cache keyed by path+mtime+size |
+| F23 | Sequential TMDb API calls without batching | `a0bddd5` | Bulk metadata fetch via GetBulkMovieInfo with per-movie fallback; credits skipped in bulk mode |
+| F24 | Unbounded all-movies query before filtering | `f4e997d` | Added GetMonitoredMovies() repository method |
+| F28 | Logging elapsed time bug (wrong stopwatch) | `b6ee4aa` | Fixed stopwatch reference |
+| F29 | Missing tooltip for disabled CreateEmptyMovieFolders | `9627b5d` | Added help text |
+| F30 | Vague label for UnmonitorOnCutoffMet | `9627b5d` | Improved label text |
+| F31 | RefreshMonitoredOnly in wrong settings section | `0b58556` | Moved to appropriate section |
+| F32 | PlaceInRootFolder lacks visual emphasis | `9627b5d` | Added warning help text |
+| F33 | Title filtering doesn't log retained vs filtered files | `ba357a9` | Added trace logging for matched files |
+| F34 | RefreshMonitoredOnly doesn't log per-movie skip reason | `0b58556` | Added debug logging |
+| F35 | RecycleBin cleanup swallows permission errors | `b6ee4aa` | Surfaced to health check |
+| F37 | No tests for RefreshMonitoredOnly | `3cf1455` | Added test cases |
+| F38 | No tests for PlaceInRootFolder path building | `b6ee4aa` | Added test case |
+| F39 | No tests for PlaceInRootFolder movie addition | `b6ee4aa` | Added test case |
+| F40 | No integration test for combined features | `a0bddd5` | PlaceInRootFolderFixture (9 tests) + RefreshMovieBulkFixture (9 tests) |
+| F41 | Missing docs/TODO.md | `01ae840` | Created from review findings |
+| F42 | Inconsistent TreatWarningsAsErrors | `00fa2c6` | Documented exception in CLAUDE.md |
+| F43 | No upstream merge strategy documented | `00fa2c6` | Added to CLAUDE.md |
+
+### Downgraded (not a defect / by design)
+
+| # | Finding | Rationale |
+|---|---------|-----------|
+| F13 | PlaceInRootFolder config toggle migration | Toggle only affects new movies; existing paths stay valid. Mixed layout is cosmetic, not a data integrity issue. All scan/delete guards handle both layouts. |
+| F14 | MediaFileTableCleanup path consistency | Cleanup correctly marks moved files as missing. User reconnects via rescan or movie edit. This is existing Radarr behavior by design. |
+
+### Accepted risk / low priority (no action taken)
+
+| # | Finding | Rationale |
+|---|---------|-----------|
+| F12 | API key in query string | Upstream behavior; header auth preferred but query string kept for backward compat |
+| F16 | Already-imported check only looks at current batch | Edge case; existing Radarr behavior |
+| F19 | Scan+delete race condition | Low impact; defensive checks not cost-justified |
+| F20 | Rescan queued with potentially invalid MovieId | Low impact; silently dropped with no side effects |
+| F25 | Sequential file size polling on NAS/SMB | Deferred to performance optimization sprint |
+| F26 | RemoveEmptySubfolders called per-movie on shared root | Mitigated by F3 guard (skipped entirely in PlaceInRootFolder mode) |
+| F27 | N+1 pattern in MovieRepository.All() | Deferred to out-of-scope optimization sprint |
+| F36 | Extra files orphaned on config toggle | Low impact; covered by F13 downgrade rationale |
+
+### Parked
+
+| # | Finding | Rationale |
+|---|---------|-----------|
+| F18 | Config snapshot reads to prevent mid-operation changes | High effort, low probability of occurrence in practice. Tracked in docs/TODO.md. |
