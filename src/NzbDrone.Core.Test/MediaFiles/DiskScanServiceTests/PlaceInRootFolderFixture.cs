@@ -139,6 +139,49 @@ namespace NzbDrone.Core.Test.MediaFiles.DiskScanServiceTests
         }
 
         [Test]
+        public void should_not_match_same_title_with_different_year_in_fallback()
+        {
+            GivenPlaceInRootFolder();
+            GivenRootFolderExists();
+
+            // Movie in DB is "Starlight Express (2024)" but file on disk is the 2019 version
+            var wrongYearFile = Path.Combine(_rootFolder, "Starlight Express (2019).mkv").AsOsAgnostic();
+
+            GivenFiles(new List<string> { wrongYearFile });
+
+            Subject.Scan(_movie1);
+
+            // Should NOT match — different year means different movie
+            Mocker.GetMock<IMakeImportDecision>()
+                  .Verify(v => v.GetImportDecisions(
+                      It.Is<List<string>>(l => l.Count == 0),
+                      _movie1,
+                      false), Times.Once());
+        }
+
+        [Test]
+        public void should_match_title_only_file_in_fallback_but_reject_wrong_year()
+        {
+            GivenPlaceInRootFolder();
+            GivenRootFolderExists();
+
+            // No-year file should match, wrong-year file should not
+            var noYearFile = Path.Combine(_rootFolder, "Starlight Express.mkv").AsOsAgnostic();
+            var wrongYearFile = Path.Combine(_rootFolder, "Starlight Express (2019).mkv").AsOsAgnostic();
+
+            GivenFiles(new List<string> { noYearFile, wrongYearFile });
+
+            Subject.Scan(_movie1);
+
+            // Primary filter (title+year) finds nothing, fallback should only match the no-year file
+            Mocker.GetMock<IMakeImportDecision>()
+                  .Verify(v => v.GetImportDecisions(
+                      It.Is<List<string>>(l => l.Count == 1 && l[0] == noYearFile),
+                      _movie1,
+                      false), Times.Once());
+        }
+
+        [Test]
         public void should_skip_extra_files_scan_when_place_in_root_folder_enabled()
         {
             GivenPlaceInRootFolder();

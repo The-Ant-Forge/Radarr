@@ -84,6 +84,7 @@ namespace NzbDrone.Core.MediaFiles
         private static readonly Regex ExcludedSubFoldersRegex = new Regex(@"(?:\\|\/|^)(?:@eadir|\.@__thumb|plex versions|\.[^\\/]+)(?:\\|\/)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex ExcludedExtraFilesRegex = new Regex(@"(-(trailer|other|behindthescenes|deleted|featurette|interview|scene|short)\.[^.]+$)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex ExcludedFilesRegex = new Regex(@"^\.(_|unmanic|DS_Store$)|^Thumbs\.db$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex YearRegex = new Regex(@"[\(\[\s._-](?<year>(?:19|20)\d{2})[\)\]\s._-]", RegexOptions.Compiled);
 
         public void Scan(Movie movie)
         {
@@ -197,15 +198,32 @@ namespace NzbDrone.Core.MediaFiles
                     return fileName != null && fileName.StartsWith(titleWithYear, StringComparison.OrdinalIgnoreCase);
                 }).ToList();
 
-                // Fall back to title-only match if year-match found nothing (reuse cached file list)
+                // Fall back to title-only match if year-match found nothing (reuse cached file list).
+                // Only match files that either have no year or have a matching year — avoids
+                // grabbing "Oldboy (2003)" when scanning for "Oldboy (2013)".
                 if (mediaFileList.Count == 0)
                 {
                     var movieTitle = NormalizeForComparison(movie.Title);
+                    var yearString = movie.Year.ToString();
                     mediaFileList = allVideoFiles
                         .Where(f =>
                         {
                             var fileName = NormalizeForComparison(Path.GetFileNameWithoutExtension(f));
-                            return fileName != null && fileName.StartsWith(movieTitle, StringComparison.OrdinalIgnoreCase);
+                            if (fileName == null || !fileName.StartsWith(movieTitle, StringComparison.OrdinalIgnoreCase))
+                            {
+                                return false;
+                            }
+
+                            var yearMatch = YearRegex.Match(fileName);
+
+                            // No year in filename — allow the match (title-only file)
+                            if (!yearMatch.Success)
+                            {
+                                return true;
+                            }
+
+                            // Year present — must match the movie's year
+                            return yearMatch.Groups["year"].Value == yearString;
                         }).ToList();
                 }
 
