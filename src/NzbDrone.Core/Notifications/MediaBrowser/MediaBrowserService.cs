@@ -42,9 +42,9 @@ namespace NzbDrone.Core.Notifications.Emby
 
             var mappedPath = new OsPath(movie.Path);
 
-            if (settings.MapTo.IsNotNullOrWhiteSpace())
+            if (settings.MapFrom.IsNotNullOrWhiteSpace())
             {
-                mappedPath = new OsPath(settings.MapTo) + (mappedPath - new OsPath(settings.MapFrom));
+                mappedPath = new OsPath(settings.MapFrom) + (mappedPath - new OsPath(settings.MapTo));
             }
 
             paths.Add(mappedPath.ToString());

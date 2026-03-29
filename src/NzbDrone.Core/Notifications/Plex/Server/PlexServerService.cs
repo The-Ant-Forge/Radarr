@@ -108,9 +108,9 @@ namespace NzbDrone.Core.Notifications.Plex.Server
                     var rootFolder = new OsPath(rootFolderPath);
                     var mappedPath = rootFolder;
 
-                    if (settings.MapTo.IsNotNullOrWhiteSpace())
+                    if (settings.MapFrom.IsNotNullOrWhiteSpace())
                     {
-                        mappedPath = new OsPath(settings.MapTo) + (rootFolder - new OsPath(settings.MapFrom));
+                        mappedPath = new OsPath(settings.MapFrom) + (rootFolder - new OsPath(settings.MapTo));
 
                         _logger.Trace("Mapping Path from {0} to {1} for partial scan", rootFolder, mappedPath);
                     }
