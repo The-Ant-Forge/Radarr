@@ -181,14 +181,15 @@ namespace NzbDrone.Core.MediaFiles
 
             var rootFolder = _rootFolderService.GetBestRootFolderPath(movie.Path);
 
-            if (rootFolder.IsNullOrWhiteSpace() || movie.Path.PathEquals(rootFolder))
+            if (rootFolder.IsNullOrWhiteSpace() || movie.Path.PathEquals(rootFolder) || rootFolder.IsParentPath(movie.Path))
             {
+                // movie.Path is the root folder or a child of it — already correct
                 return filePath;
             }
 
-            // Legacy movie with individual folder path — rebase file into root folder
+            // Legacy movie with individual folder path outside root — rebase file into movie.Path
             var fileName = Path.GetFileName(filePath);
-            var rebased = Path.Combine(rootFolder, fileName);
+            var rebased = Path.Combine(movie.Path, fileName);
 
             _logger.Debug("PlaceInRootFolder: rebasing destination from {0} to {1}", filePath, rebased);
 
