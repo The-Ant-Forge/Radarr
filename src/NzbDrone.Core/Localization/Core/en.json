@@ -1963,7 +1963,7 @@
   "UnmonitorDeletedMovies": "Unmonitor Deleted Movies",
   "UnmonitorDeletedMoviesHelpText": "Movies deleted from disk are automatically unmonitored in {appName}",
   "UnmonitorOnCutoffMet": "Unmonitor After Quality Cutoff",
-  "UnmonitorOnCutoffMetHelpText": "Automatically unmonitor a movie after a file matching the quality cutoff is imported",
+  "UnmonitorOnCutoffMetHelpText": "Automatically unmonitor a movie after a file matching the quality cutoff is imported. Also unmonitors newly added movies if a file already exists on disk.",
   "UnmonitorSelected": "Unmonitor Selected",
   "Unmonitored": "Unmonitored",
   "Unlink": "Unlink",
