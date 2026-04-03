@@ -168,12 +168,14 @@ All releases should have a thorough description in markdown format. Descriptions
 
 ### Versioning convention
 
-Tags follow the pattern `v{upstream}-antforge.{n}`:
+Tags follow the pattern `v{upstream}-antforge.{N}` where `N` is the total
+number of fork commits (counted from the first fork commit via `git log --oneline <first-fork-sha>^..HEAD | wc -l`):
 
 | Tag | Meaning |
 |---|---|
-| `v6.1.1.10350-antforge.1` | Our 1st release, rooted in upstream v6.1.1.10350 source |
-| `v6.1.1.10350-antforge.2` | Our 2nd release, still rooted in v6.1.1.10350 |
-| `v6.1.1.10360-antforge.3` | After cherry-picking from upstream v6.1.1.10360 |
+| `v6.1.1.10360-antforge.41` | 41 commits on top of upstream v6.1.1.10360 |
+| `v6.1.1.10360-antforge.55` | 55 commits, still rooted in v6.1.1.10360 |
+| `v6.1.2.10380-antforge.60` | 60 commits, after cherry-picking from upstream v6.1.2.10380 |
 
-The upstream version part reflects which source base we are aligned with. The `antforge.N` counter reflects our own commit cadence on top of it. When we cherry-pick from a new upstream release, bump the upstream part and keep our commit count.
+The upstream version part reflects which source base we are aligned with.
+When we cherry-pick from a new upstream release, bump the upstream part.
