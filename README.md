@@ -2,59 +2,73 @@
 
 A fork of [Radarr](https://github.com/Radarr/Radarr) — movie collection manager for Usenet and BitTorrent users.
 
-This fork adds new features, code quality improvements, and bug fixes on top of the upstream Radarr project. Changes are developed with the goal of eventual contribution back to the upstream project via pull requests but divergence may happen due to migrating many of the dependencies and removal and inlining of lightly used dependencies.
+This fork adds features, performance improvements, and bug fixes on top of upstream Radarr. It is a standalone repository; the upstream remote is retained for cherry-picking useful commits.
 
-## Fork Changes
+## Features
 
-### New Features
+**Place in Root Folder** — Place movie files directly in the root folder instead of creating per-movie subfolders. Useful for flat library layouts or external organisation tools. Includes title-based file filtering with year validation and path deduplication. See [Spec-No-Folders.md](docs/Spec-No-Folders.md).
 
-**Place in Root Folder** — A new setting in Media Management that tells Radarr to place movie files directly in the root folder instead of creating a per-movie subfolder. Useful for flat library layouts or users who rely on external tools for organisation. See [Spec-No-Folders.md](docs/Spec-No-Folders.md).
+**Refresh Monitored Movies Only** — Skip unmonitored movies during refresh and disk scan cycles, with bulk TMDb API support for faster metadata updates. See [Spec-Refresh-Monitored-Only.md](docs/Spec-Refresh-Monitored-Only.md).
 
-**Refresh Monitored Movies Only** — A new setting in Media Management that skips unmonitored movies during refresh and disk scan cycles. Combined with scan path deduplication and title-based file filtering, this dramatically improves performance for PlaceInRootFolder users with large libraries. See [Spec-Refresh-Monitored-Only.md](docs/Spec-Refresh-Monitored-Only.md).
+**Unmonitor on Cutoff Met** — Automatically unmonitor movies after import once quality meets the profile cutoff. Also unmonitors newly added movies (e.g. from Overseerr) if a file already exists on disk, preventing unnecessary searches and overwrites. See [Spec-UnMonitor.md](docs/Spec-UnMonitor.md).
 
-**Unmonitor on Cutoff Met** — A new setting in Media Management > File Management that automatically unmonitors movies after import once the file quality meets or exceeds the quality profile's cutoff. Saves indexer API calls and bandwidth by stopping searches for upgrades that aren't needed. See [Spec-UnMonitor.md](docs/Spec-UnMonitor.md).
+**Unlink Movie Files** — New UI button (broken chain icon) in the movie file list to detach a file from a movie record without deleting it from disk.
 
-### Bug Fixes
+**Scan Locking and Change Detection** — Path-level scan locking prevents concurrent scans of the same folder. Folder LastWriteTime detection skips unchanged folders for faster rescans.
 
-- **createAjaxRequest GET params** — Fixed jQuery-to-fetch migration bug where GET request query parameters were not being appended to the URL correctly.
-- **HttpProxySettingsProvider** — Fixed CA1846 (AsSpan over Substring) and SA1513 (StyleCop formatting) build errors.
+**Bulk TMDb Refresh** — Metadata refresh uses the bulk SkyHook API for multi-movie updates with automatic per-movie fallback, skipping credits in bulk mode for efficiency.
 
-### Code Quality
+## Bug Fixes
 
-Two rounds of code review covering security, correctness, and quality improvements across the codebase. See [Code-Review-260308.md](docs/Code-Review-260308.md) for the full review document.
+- **Plex/Emby path mapping** — Fixed inverted MapFrom/MapTo logic that caused OsPath platform mismatch when Radarr (Windows) notifies Plex (Linux/NAS)
+- **Import path rebase** — Fixed legacy movies importing to wrong folder when PlaceInRootFolder is enabled
+- **Year-aware title matching** — Fixed same-title different-year movies (e.g. two versions of the same film) being confused in PlaceInRootFolder mode
+- **Root folder deletion guards** — Added PlaceInRootFolder guards on all deletion paths to prevent accidental deletion of shared root folders
+- **Bulk operation safety** — Fixed cross-movie context in bulk file delete and early exit on path conflicts
+- **OS-aware path comparison** — Fixed RelativePath identity check for movie file moves
+- **Backup downloads** — Fixed trailing slash in backup folder path (upstream cherry-pick)
+- **URL parsing locale** — Fixed URL parsing on non-English systems (upstream cherry-pick)
 
-Highlights:
-- Async controller improvements and dead code removal
-- OAuth flow isolation and security hardening
-- Input validation and error handling improvements
-- Dependency updates and dead dependency removal
+## Performance
+
+- **Media info cache** — Hash-based FFProbe cache keyed by path+mtime+size avoids redundant analysis on rescan
+- **Monitored-only SQL filtering** — `GetMonitoredMovies()` pushes filtering to the database instead of loading all movies then discarding
+- **Scan early exit** — Folders unchanged since last scan are skipped entirely via LastDiskScanTime tracking
+
+## Code Quality
+
+Two rounds of code review (43 findings, 40 resolved). See [Code-Review-260313.md](docs/Code-Review-260313.md) for the full review with resolution status.
+
+- Root folder deletion and bulk operation safety guards
+- UX improvements: tooltips, labels, settings placement
+- Observability: structured debug/trace logging for scan and refresh decisions
+- Test coverage: PlaceInRootFolder, RefreshMonitoredOnly, bulk API, and path dedup test suites
+- Dead dependency removal (jQuery, Twitter notification, Plex legacy XML)
+- Safe dependency updates across frontend and backend
 
 ## Upstream Radarr
 
-This fork is based on [Radarr/Radarr](https://github.com/Radarr/Radarr) and tracks the upstream `develop` branch. The upstream remote is configured as `upstream`.
+Based on upstream v6.1.2. Cherry-picks are taken individually rather than merging, as the histories have diverged. See [CLAUDE.md](CLAUDE.md) for the merge strategy.
 
-For upstream documentation, features, and support:
+For upstream documentation:
 - [Wiki](https://wiki.servarr.com/radarr)
-- [Discord](https://radarr.video/discord)
 - [API Documentation](https://radarr.video/docs/api/)
-- [Contributing Guide](CONTRIBUTING.md)
 
 ## Development
 
-See [CLAUDE.md](CLAUDE.md) for full build instructions, project structure, and local testing deployment setup.
+See [CLAUDE.md](CLAUDE.md) for full build instructions, project structure, and deployment setup.
 
-Quick start:
 ```bash
-# Prerequisites: .NET 8 SDK, Node.js 20+, Yarn (corepack enable)
+# Prerequisites: .NET 8 SDK, Node.js 20.x, Yarn (corepack enable)
 
 # Backend (self-contained, win-x64)
-dotnet msbuild -restore src/Radarr.sln -p:Configuration=Release -p:Platform=Posix -p:RuntimeIdentifiers=win-x64 -p:SelfContained=true -t:PublishAllRids
+dotnet msbuild -restore src/Radarr.sln -p:Configuration=Release -p:Platform=Posix \
+  -p:RuntimeIdentifiers=win-x64 -p:SelfContained=true -t:PublishAllRids
 
 # Frontend
-yarn install
-yarn build
+yarn install && yarn build
 
-# Deploy to local test instance
+# Deploy to local instance
 ./scripts/deploy-local.sh
 ```
 
